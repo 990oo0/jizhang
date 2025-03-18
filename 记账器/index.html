@@ -796,6 +796,15 @@
                             <option value="银行卡">银行卡</option>
                         </select>
                     </div>
+<!-- 找到"是否结账"的下拉选择框后面，添加这段HTML -->
+<div id="partial-payment-group" class="form-group" style="display: none;">
+    <label class="form-label">已结金额(元)</label>
+    <input type="number" step="0.1" class="form-control" id="sale-partial-amount" placeholder="输入已结金额" onchange="updateRemainingAmount()">
+</div>
+<div id="remaining-payment-group" class="form-group" style="display: none;">
+    <label class="form-label">未结金额(元)</label>
+    <input type="number" step="0.1" class="form-control" id="sale-remaining" placeholder="未结金额" readonly>
+</div>
                     <div class="form-group">
                         <label class="form-label">销售日期</label>
                         <input type="date" class="form-control" id="sale-date">
@@ -1263,7 +1272,37 @@
         function formatCurrency(amount) {
             return '¥' + parseFloat(amount).toFixed(2);
         }
+// 添加这个新函数用于更新未结金额
+function updateRemainingAmount() {
+    const totalPrice = parseFloat(document.getElementById('sale-total').value) || 0;
+    const paidAmount = parseFloat(document.getElementById('sale-partial-amount').value) || 0;
+    const remainingAmount = totalPrice - paidAmount;
+    
+    document.getElementById('sale-remaining').value = remainingAmount > 0 ? remainingAmount.toFixed(2) : '0.00';
+}
 
+// 为销售表单中的结账方式下拉框添加事件监听
+function setupPartialPayment() {
+    document.getElementById('sale-payment').addEventListener('change', function() {
+        const partialPaymentGroup = document.getElementById('partial-payment-group');
+        const remainingPaymentGroup = document.getElementById('remaining-payment-group');
+        const paymentMethodGroup = document.getElementById('payment-method-group');
+        
+        if (this.value === '部分结账') {
+            partialPaymentGroup.style.display = 'block';
+            remainingPaymentGroup.style.display = 'block';
+            paymentMethodGroup.style.display = 'block';
+        } else if (this.value === '已结清') {
+            partialPaymentGroup.style.display = 'none';
+            remainingPaymentGroup.style.display = 'none';
+            paymentMethodGroup.style.display = 'block';
+        } else {
+            partialPaymentGroup.style.display = 'none';
+            remainingPaymentGroup.style.display = 'none';
+            paymentMethodGroup.style.display = 'none';
+        }
+    });
+}
         // 手机号格式化，隐藏中间4位
         function formatPhone(phone) {
             if(!phone || phone.length < 7) return phone;
@@ -1302,7 +1341,7 @@
                 const paymentMethodGroup = document.getElementById('payment-method-group');
                 paymentMethodGroup.style.display = this.value === '已结清' ? 'block' : 'none';
             });
-            
+            setupPartialPayment();
             // 初始化图表
             initSalesChart();
             
@@ -1311,22 +1350,33 @@
             checkUnpaidDebt();
         }
 
-        // 设置事件监听器
-        function setupEventListeners() {
-            // 库存搜索
-            document.getElementById('inventory-search').addEventListener('input', function() {
-                currentState.inventorySearch = this.value.trim().toLowerCase();
-                currentState.inventoryPage = 1;
-                updateInventoryList();
-            });
-            
-            // 客户搜索
-            document.getElementById('customer-search').addEventListener('input', function() {
-                currentState.customerFilter = this.value.trim().toLowerCase();
-                currentState.customerPage = 1;
-                updateCustomerList();
-            });
-            
+              // 找到setupEventListeners函数，添加或修改下面的代码
+function setupEventListeners() {
+    // 库存搜索
+    document.getElementById('inventory-search').addEventListener('input', function() {
+        currentState.inventorySearch = this.value.trim().toLowerCase();
+        currentState.inventoryPage = 1;
+        updateInventoryList();
+    });
+    
+    // 客户搜索 - 确保这段代码存在并正确
+    document.getElementById('customer-search').addEventListener('input', function() {
+        currentState.customerFilter = this.value.trim().toLowerCase();
+        currentState.customerPage = 1;
+        updateCustomerList();
+    });
+    
+    // 搜索按钮点击事件 - 新增这段代码
+    document.getElementById('header-search-btn').addEventListener('click', function() {
+        const currentScreen = currentState.currentScreen;
+        if (currentScreen === 'customer-form') {
+            document.getElementById('customer-search').focus();
+        } else if (currentScreen === 'inventory-screen') {
+            document.getElementById('inventory-search').focus();
+        } else if (currentScreen === 'transactions-screen') {
+            document.getElementById('transaction-search').focus();
+        }
+    });     
             // 交易搜索
             document.getElementById('transaction-search').addEventListener('input', function() {
                 currentState.transactionSearch = this.value.trim().toLowerCase();
@@ -1977,20 +2027,29 @@
             if(payment === '已结清') {
                 paymentMethod = document.getElementById('sale-payment-method').value;
             }
-            
-            // 创建销售记录
-            const sale = {
-                customer,
-                product,
-                quantity,
-                price,
-                payment,
-                paymentMethod,
-                date,
-                notes,
-                timestamp: Date.now()
-            };
-            
+            let partialAmount = 0;
+    if (payment === '部分结账') {
+        partialAmount = parseFloat(document.getElementById('sale-partial-amount').value) || 0;
+        if (partialAmount <= 0 || partialAmount >= (price * quantity)) {
+            toast.error('请输入有效的已结金额！');
+            return;
+        }
+    }
+    
+    // 创建销售记录，添加部分结账金额
+    const sale = {
+        customer,
+        product,
+        quantity,
+        price,
+        payment,
+        paymentMethod: payment !== '未结账' ? document.getElementById('sale-payment-method').value : '',
+        partialAmount: payment === '部分结账' ? partialAmount : 0,
+        date,
+        notes,
+        timestamp: Date.now()
+    };
+                        
             // 更新库存
             appData.inventory[inventoryIndex].stock -= quantity;
             
@@ -2339,75 +2398,82 @@
             html += '</div>';
             container.innerHTML = html;
         }
-// 更新客户列表
-        function updateCustomerList() {
-            const container = document.getElementById('customer-list');
-            const paginationContainer = document.getElementById('customer-pagination');
-            
-            if(appData.customers.length === 0) {
-                container.innerHTML = '<p class="empty-hint">还没有客户，请添加新客户</p>';
-                paginationContainer.innerHTML = '';
-                return;
-            }
-            
-            // 计算客户欠款
-            const customerDebt = calculateCustomerDebt();
-            
-            // 筛选和排序客户列表
-            let filteredCustomers = [...appData.customers];
-            
-            // 应用搜索筛选
-            if(currentState.customerFilter) {
-                filteredCustomers = filteredCustomers.filter(customer => 
-                    customer.name.toLowerCase().includes(currentState.customerFilter) ||
-                    (customer.contact && customer.contact.toLowerCase().includes(currentState.customerFilter)) ||
-                    (customer.phone && customer.phone.includes(currentState.customerFilter))
-                );
-            }
-            
-            // 按欠款金额排序，欠款多的在前面
-            filteredCustomers.sort((a, b) => 
-                (customerDebt[b.name] || 0) - (customerDebt[a.name] || 0)
-            );
-            
-            // 计算分页
-            const totalPages = Math.ceil(filteredCustomers.length / currentState.itemsPerPage);
-            const start = (currentState.customerPage - 1) * currentState.itemsPerPage;
-            const end = start + currentState.itemsPerPage;
-            const pageCustomers = filteredCustomers.slice(start, end);
-            
-            // 生成客户列表HTML
-            let html = '';
-            
-            pageCustomers.forEach(customer => {
-                const debt = customerDebt[customer.name] || 0;
-                const debtHtml = debt > 0 ? 
-                    `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` : 
-                    `<span class="badge badge-success">无欠款</span>`;
-                
-                html += `
-                    <div class="list-item" onclick="showCustomerDetail('${customer.name}')">
-                        <div class="item-info">
-                            <div class="item-name">${customer.name}</div>
-                            <div class="item-detail">联系人: ${customer.contact || '未设置'} ${customer.phone ? `(${formatPhone(customer.phone)})` : ''}</div>
-                        </div>
-                        <div class="item-value">
-                            ${debt > 0 ? formatCurrency(debt) : ''}
-                            ${debtHtml}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-            
-            // 更新分页控件
-            updatePagination(paginationContainer, totalPages, currentState.customerPage, page => {
-                currentState.customerPage = page;
-                updateCustomerList();
-            });
-        }
+
+        // 完全替换updateCustomerList函数
+function updateCustomerList() {
+    const container = document.getElementById('customer-list');
+    const paginationContainer = document.getElementById('customer-pagination');
+    
+    // 检查数据是否正确加载
+    if (!appData || !appData.customers) {
+        loadAppData(); // 重新加载数据
+    }
+    
+    console.log('更新客户列表，当前客户数量:', appData.customers.length);
+    
+    if(appData.customers.length === 0) {
+        container.innerHTML = '<p class="empty-hint">还没有客户，请添加新客户</p>';
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    // 计算客户欠款
+    const customerDebt = calculateCustomerDebt();
+    
+    // 筛选和排序客户列表
+    let filteredCustomers = [...appData.customers];
+    
+    // 应用搜索筛选
+    if(currentState.customerFilter) {
+        filteredCustomers = filteredCustomers.filter(customer => 
+            customer.name.toLowerCase().includes(currentState.customerFilter) ||
+            (customer.contact && customer.contact.toLowerCase().includes(currentState.customerFilter)) ||
+            (customer.phone && customer.phone.includes(currentState.customerFilter))
+        );
+    }
+    
+    // 按欠款金额排序，欠款多的在前面
+    filteredCustomers.sort((a, b) => 
+        (customerDebt[b.name] || 0) - (customerDebt[a.name] || 0)
+    );
+    
+    // 计算分页
+    const totalPages = Math.ceil(filteredCustomers.length / currentState.itemsPerPage);
+    const start = (currentState.customerPage - 1) * currentState.itemsPerPage;
+    const end = start + currentState.itemsPerPage;
+    const pageCustomers = filteredCustomers.slice(start, end);
+    
+    // 生成客户列表HTML
+    let html = '';
+    
+    pageCustomers.forEach(customer => {
+        const debt = customerDebt[customer.name] || 0;
+        const debtHtml = debt > 0 ? 
+            `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` : 
+            `<span class="badge badge-success">无欠款</span>`;
         
+        html += `
+            <div class="list-item" onclick="showCustomerDetail('${customer.name}')">
+                <div class="item-info">
+                    <div class="item-name">${customer.name}</div>
+                    <div class="item-detail">联系人: ${customer.contact || '未设置'} ${customer.phone ? `(${formatPhone(customer.phone)})` : ''}</div>
+                </div>
+                <div class="item-value">
+                    ${debt > 0 ? formatCurrency(debt) : ''}
+                    ${debtHtml}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // 更新分页控件
+    updatePagination(paginationContainer, totalPages, currentState.customerPage, function(page) {
+        currentState.customerPage = page;
+        updateCustomerList();
+    });
+}
         // 更新库存列表
         function updateInventoryList() {
             const container = document.getElementById('full-inventory-list');
@@ -2992,33 +3058,35 @@
             // 返回主页
             showScreen('home-screen');
         }
-        
-        // 计算客户欠款总额
-        function calculateCustomerDebt() {
-            const customerDebt = {};
+        // 修改calculateCustomerDebt函数
+function calculateCustomerDebt() {
+    const customerDebt = {};
+    
+    // 初始化客户欠款为0
+    appData.customers.forEach(customer => {
+        customerDebt[customer.name] = 0;
+    });
+    
+    // 累加未结清销售金额
+    appData.sales.forEach(sale => {
+        if(sale.payment !== '已结清') {
+            const totalAmount = sale.price * sale.quantity;
             
-            // 初始化客户欠款为0
-            appData.customers.forEach(customer => {
-                customerDebt[customer.name] = 0;
-            });
-            
-            // 累加未结清销售金额
-            appData.sales.forEach(sale => {
-                if(sale.payment !== '已结清') {
-                    const amount = sale.price * sale.quantity;
-                    
-                    if(sale.payment === '未结账') {
-                        customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + amount;
-                    } else if(sale.payment === '部分结账') {
-                        customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + amount * 0.5; // 假设部分结账为50%
-                    }
-                }
-            });
-            
-            return customerDebt;
+            if(sale.payment === '未结账') {
+                customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + totalAmount;
+            } else if(sale.payment === '部分结账') {
+                // 使用实际已结金额计算欠款
+                const paidAmount = sale.partialAmount || (totalAmount * 0.5); // 如果没有partialAmount字段，使用默认的50%
+                const debtAmount = totalAmount - paidAmount;
+                customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + debtAmount;
+            }
         }
-        
-        // 生成分页控件
+    });
+    
+    return customerDebt;
+}
+
+                // 生成分页控件
         function updatePagination(container, totalPages, currentPage, callback) {
             if(totalPages <= 1) {
                 container.innerHTML = '';
