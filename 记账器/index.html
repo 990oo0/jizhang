@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="禽易记">
     <title>禽易记 - 家禽批发记账系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css">
     <style>
         :root {
             --primary-color: #4a86e8;
@@ -42,6 +43,26 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .back-btn {
+            color: white;
+            font-size: 20px;
+            display: none;
+        }
+        
+        .search-btn {
+            color: white;
+            font-size: 20px;
+            margin-right: 10px;
         }
         
         .container {
@@ -300,9 +321,21 @@
             color: white;
         }
         
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
         .btn-danger {
             background-color: var(--danger-color);
             color: white;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 0;
+            width: auto;
         }
         
         .back-link {
@@ -339,11 +372,6 @@
             display: block;
         }
         
-        /* Add/Edit Forms */
-        #purchase-form, #sale-form, #customer-form, #report-screen {
-            display: none;
-        }
-        
         /* 空内容提示样式 */
         .empty-hint {
             padding: 20px;
@@ -351,11 +379,257 @@
             color: #999;
             font-size: 14px;
         }
+        
+        /* 搜索框样式 */
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 12px;
+            color: var(--light-text);
+        }
+        
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .pagination-btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: white;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        
+        .pagination-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            width: 100%;
+            height: 250px;
+            margin: 15px 0;
+        }
+        
+        /* 切换按钮组 */
+        .toggle-group {
+            display: flex;
+            margin-bottom: 15px;
+            background-color: var(--secondary-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            font-size: 14px;
+            background-color: var(--secondary-color);
+            border: none;
+            color: var(--text-color);
+        }
+        
+        .toggle-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* toast通知样式 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            max-width: 80%;
+        }
+        
+        .toast {
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+            opacity: 0;
+        }
+        
+        .toast-success {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .toast-error {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .toast-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .toast-info {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .toast-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* 标签筛选 */
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            gap: 8px;
+        }
+        
+        .filter-tag {
+            padding: 5px 10px;
+            border-radius: 15px;
+            background-color: var(--secondary-color);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .filter-tag.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* 操作图标 */
+        .action-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-icon {
+            cursor: pointer;
+            color: var(--light-text);
+        }
+        
+        .action-icon.edit {
+            color: var(--primary-color);
+        }
+        
+        .action-icon.delete {
+            color: var(--danger-color);
+        }
+        
+        /* 确认对话框 */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 10px;
+            width: 85%;
+            max-width: 350px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content {
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 低库存标签 */
+        .low-stock {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+        
+        /* 复选框样式 */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
+        <a href="#" class="back-btn" id="header-back-btn"><i class="fas fa-arrow-left"></i></a>
         <h1>禽易记</h1>
+        <a href="#" class="search-btn" id="header-search-btn"><i class="fas fa-search"></i></a>
+    </div>
+    
+    <!-- Toast通知容器 -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- 确认对话框 -->
+    <div class="modal-backdrop" id="confirm-dialog">
+        <div class="modal">
+            <div class="modal-title">确认操作</div>
+            <div class="modal-content" id="confirm-message">您确定要执行此操作吗？</div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary btn-sm" id="confirm-cancel">取消</button>
+                <button class="btn btn-danger btn-sm" id="confirm-ok">确定</button>
+            </div>
+        </div>
     </div>
     
     <!-- 主屏幕 -->
@@ -394,7 +668,7 @@
             <div class="card">
                 <div class="card-title">
                     <span>商品库存</span>
-                    <small><a href="#" onclick="showScreen('inventory-screen')">查看全部</a></small>
+                    <small><a href="#" onclick="showInventoryScreen()">查看全部</a></small>
                 </div>
                 <div id="inventory-list">
                     <p class="empty-hint">暂无库存数据，请先添加商品进货</p>
@@ -404,14 +678,31 @@
             <div class="card">
                 <div class="card-title">
                     <span>最近交易</span>
-                    <small><a href="#" onclick="showScreen('transactions-screen')">查看全部</a></small>
+                    <small><a href="#" onclick="showTransactionsScreen()">查看全部</a></small>
                 </div>
                 <div id="recent-transactions">
                     <p class="empty-hint">暂无交易记录，请先添加销售数据</p>
                 </div>
             </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <span>销售趋势</span>
+                    <small>
+                        <select id="trend-period" onchange="updateSalesTrend()">
+                            <option value="week">本周</option>
+                            <option value="month" selected>本月</option>
+                            <option value="year">本年</option>
+                        </select>
+                    </small>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sales-chart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
+    
     <!-- 进货表单 -->
     <div id="purchase-form" class="screen">
         <div class="container">
@@ -421,7 +712,10 @@
                 <form id="new-purchase">
                     <div class="form-group">
                         <label class="form-label">商品类型</label>
-                        <input type="text" class="form-control" id="purchase-product" placeholder="输入商品类型">
+                        <input type="text" class="form-control" id="purchase-product" placeholder="输入商品类型" list="product-list">
+                        <datalist id="product-list">
+                            <!-- 动态填充可选商品 -->
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">进货数量</label>
@@ -433,7 +727,10 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">供应商</label>
-                        <input type="text" class="form-control" id="purchase-supplier" placeholder="输入供应商名称">
+                        <input type="text" class="form-control" id="purchase-supplier" placeholder="输入供应商名称" list="supplier-list">
+                        <datalist id="supplier-list">
+                            <!-- 动态填充可选供应商 -->
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">进货日期</label>
@@ -458,19 +755,29 @@
                 <form id="new-sale">
                     <div class="form-group">
                         <label class="form-label">客户</label>
-                        <input type="text" class="form-control" id="sale-customer" placeholder="输入客户名称">
+                        <input type="text" class="form-control" id="sale-customer" placeholder="输入客户名称" list="customer-list">
+                        <datalist id="customer-list">
+                            <!-- 动态填充可选客户 -->
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">商品类型</label>
-                        <input type="text" class="form-control" id="sale-product" placeholder="输入商品类型">
+                        <select class="form-select" id="sale-product" onchange="updateProductPrice()">
+                            <option value="">选择商品</option>
+                            <!-- 动态填充商品选项 -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">销售数量</label>
-                        <input type="number" class="form-control" id="sale-quantity" placeholder="输入数量">
+                        <input type="number" class="form-control" id="sale-quantity" placeholder="输入数量" onchange="updateTotalPrice()">
                     </div>
                     <div class="form-group">
                         <label class="form-label">销售单价(元)</label>
-                        <input type="number" step="0.1" class="form-control" id="sale-price" placeholder="输入单价">
+                        <input type="number" step="0.1" class="form-control" id="sale-price" placeholder="输入单价" onchange="updateTotalPrice()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">总价(元)</label>
+                        <input type="number" step="0.1" class="form-control" id="sale-total" placeholder="总价" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">是否结账</label>
@@ -478,6 +785,15 @@
                             <option value="已结清">已全部结清</option>
                             <option value="未结账">未结账</option>
                             <option value="部分结账">部分结账</option>
+                        </select>
+                    </div>
+                    <div id="payment-method-group" class="form-group">
+                        <label class="form-label">支付方式</label>
+                        <select class="form-select" id="sale-payment-method">
+                            <option value="现金">现金</option>
+                            <option value="微信">微信支付</option>
+                            <option value="支付宝">支付宝</option>
+                            <option value="银行卡">银行卡</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -493,15 +809,28 @@
             </div>
         </div>
     </div>
-    
-    <!-- 客户表单 -->
+<!-- 客户表单 -->
     <div id="customer-form" class="screen">
         <div class="container">
             <a href="#" class="back-link" onclick="showScreen('home-screen')"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="customer-search" placeholder="搜索客户...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
             <div class="card">
-                <div class="card-title">客户管理</div>
+                <div class="card-title">
+                    <span>客户列表</span>
+                    <small>
+                        <a href="#" id="customer-batch-actions" style="display:none;">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </a>
+                    </small>
+                </div>
                 <div id="customer-list">
                     <!-- 客户列表将通过JavaScript动态生成 -->
+                </div>
+                <div class="pagination" id="customer-pagination">
+                    <!-- 分页控件将通过JavaScript动态生成 -->
                 </div>
             </div>
             <div class="card">
@@ -533,6 +862,55 @@
         </div>
     </div>
     
+    <!-- 客户详情页 -->
+    <div id="customer-detail-screen" class="screen">
+        <div class="container">
+            <a href="#" class="back-link" onclick="showScreen('customer-form')"><i class="fas fa-arrow-left"></i> 返回客户列表</a>
+            <div class="card">
+                <div class="card-title">
+                    <span id="detail-customer-name">客户详情</span>
+                    <div class="action-icons">
+                        <i class="fas fa-edit action-icon edit" onclick="editCustomer()" title="编辑客户"></i>
+                        <i class="fas fa-trash-alt action-icon delete" onclick="deleteCustomer()" title="删除客户"></i>
+                    </div>
+                </div>
+                <div id="customer-detail-info">
+                    <!-- 客户详细信息 -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">欠款明细</div>
+                <div id="customer-debt-list">
+                    <!-- 欠款明细列表 -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">历史交易</div>
+                <div class="filter-tags">
+                    <div class="filter-tag active" data-filter="all">全部</div>
+                    <div class="filter-tag" data-filter="month">本月</div>
+                    <div class="filter-tag" data-filter="3month">近三月</div>
+                    <div class="filter-tag" data-filter="year">本年</div>
+                </div>
+                <div id="customer-transactions">
+                    <!-- 交易历史列表 -->
+                </div>
+                <div class="pagination" id="transactions-pagination">
+                    <!-- 交易历史分页 -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">结账记录</div>
+                <div id="customer-payments">
+                    <!-- 结账记录列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 结账表单 -->
     <div id="payment-form" class="screen">
         <div class="container">
@@ -542,7 +920,7 @@
                 <form id="new-payment">
                     <div class="form-group">
                         <label class="form-label">选择客户</label>
-                        <select class="form-select" id="payment-customer">
+                        <select class="form-select" id="payment-customer" onchange="updateSelectedCustomerDebt()">
                             <!-- 客户选项将通过JavaScript动态生成 -->
                         </select>
                     </div>
@@ -558,9 +936,9 @@
                         <label class="form-label">结账方式</label>
                         <select class="form-select" id="payment-method">
                             <option value="现金">现金</option>
-                            <option value="银行转账">银行转账</option>
                             <option value="微信支付">微信支付</option>
                             <option value="支付宝">支付宝</option>
+                            <option value="银行转账">银行转账</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -574,6 +952,122 @@
                     <button type="button" class="btn btn-primary" onclick="processPayment()">确认结账</button>
                 </form>
             </div>
+            
+            <div class="card">
+                <div class="card-title">未结清账单</div>
+                <div id="unpaid-bills-list">
+                    <!-- 未结清账单列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- 库存管理 -->
+    <div id="inventory-screen" class="screen">
+        <div class="container">
+            <a href="#" class="back-link" onclick="showScreen('home-screen')"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="inventory-search" placeholder="搜索商品...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <span>库存管理</span>
+                    <small>
+                        <div class="action-icons">
+                            <i class="fas fa-plus action-icon" onclick="showScreen('purchase-form')" title="添加进货"></i>
+                            <i class="fas fa-cog action-icon" onclick="showInventorySettings()" title="库存设置"></i>
+                        </div>
+                    </small>
+                </div>
+                <div class="filter-tags">
+                    <div class="filter-tag active" data-filter="all">全部</div>
+                    <div class="filter-tag" data-filter="low">低库存</div>
+                </div>
+                <div id="full-inventory-list">
+                    <!-- 库存列表将通过JavaScript动态生成 -->
+                </div>
+                <div class="pagination" id="inventory-pagination">
+                    <!-- 分页控件将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 交易记录 -->
+    <div id="transactions-screen" class="screen">
+        <div class="container">
+            <a href="#" class="back-link" onclick="showScreen('home-screen')"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="transaction-search" placeholder="搜索交易...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="card">
+                <div class="card-title">交易记录</div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-type="all">全部</button>
+                    <button class="toggle-btn" data-type="purchase">进货</button>
+                    <button class="toggle-btn" data-type="sale">销售</button>
+                    <button class="toggle-btn" data-type="payment">结账</button>
+                </div>
+                <div class="filter-tags">
+                    <div class="filter-tag active" data-filter="all">全部时间</div>
+                    <div class="filter-tag" data-filter="today">今天</div>
+                    <div class="filter-tag" data-filter="week">本周</div>
+                    <div class="filter-tag" data-filter="month">本月</div>
+                </div>
+                <div id="full-transactions-list">
+                    <!-- 交易记录列表将通过JavaScript动态生成 -->
+                </div>
+                <div class="pagination" id="transaction-pagination">
+                    <!-- 分页控件将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 报表分析 -->
+    <div id="report-screen" class="screen">
+        <div class="container">
+            <a href="#" class="back-link" onclick="showScreen('home-screen')"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            <div class="card">
+                <div class="card-title">销售分析</div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-chart="sales">销售额</button>
+                    <button class="toggle-btn" data-chart="profit">利润</button>
+                    <button class="toggle-btn" data-chart="product">商品</button>
+                    <button class="toggle-btn" data-chart="customer">客户</button>
+                </div>
+                <div class="filter-tags">
+                    <div class="filter-tag" data-period="week">本周</div>
+                    <div class="filter-tag active" data-period="month">本月</div>
+                    <div class="filter-tag" data-period="quarter">本季度</div>
+                    <div class="filter-tag" data-period="year">本年</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="report-chart"></canvas>
+                </div>
+                <div id="chart-summary">
+                    <!-- 图表汇总信息 -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">销售排行</div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-rank="product">商品排行</button>
+                    <button class="toggle-btn" data-rank="customer">客户排行</button>
+                </div>
+                <div id="rank-list">
+                    <!-- 排行列表 -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">账款统计</div>
+                <div id="debt-stats">
+                    <!-- 账款统计 -->
+                </div>
+            </div>
         </div>
     </div>
     
@@ -581,8 +1075,34 @@
     <div id="settings-screen" class="screen">
         <div class="container">
             <a href="#" class="back-link" onclick="showScreen('home-screen')"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            
             <div class="card">
-                <div class="card-title">系统设置</div>
+                <div class="card-title">通知设置</div>
+                <div class="form-group">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="setting-low-stock" class="checkbox">
+                        <label for="setting-low-stock">低库存提醒</label>
+                    </div>
+                    <div class="form-group" id="low-stock-threshold-group">
+                        <label class="form-label">低库存阈值</label>
+                        <input type="number" class="form-control" id="setting-low-stock-threshold" placeholder="设置低库存阈值" value="10">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="setting-debt-reminder" class="checkbox">
+                        <label for="setting-debt-reminder">欠款提醒</label>
+                    </div>
+                    <div class="form-group" id="debt-reminder-days-group">
+                        <label class="form-label">超过天数</label>
+                        <input type="number" class="form-control" id="setting-debt-days" placeholder="设置欠款提醒天数" value="7">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">数据备份</div>
                 <div class="form-group">
                     <label class="form-label">数据备份</label>
                     <button type="button" class="btn btn-primary" onclick="exportData()">导出数据</button>
@@ -593,12 +1113,13 @@
                     <button type="button" class="btn btn-primary" onclick="document.getElementById('import-file').click()">导入数据</button>
                 </div>
                 <div class="form-group" style="margin-top: 30px;">
-                    <button type="button" class="btn btn-danger" onclick="if(confirm('确定要清除所有数据吗？此操作不可恢复!')) { localStorage.removeItem('poultryData'); location.reload(); }">清除所有数据</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmClearData()">清除所有数据</button>
                 </div>
             </div>
+            
             <div class="card" style="margin-top: 20px;">
                 <div class="card-title">关于禽易记</div>
-                <p style="padding: 10px 0;">禽易记 v1.0.0</p>
+                <p style="padding: 10px 0;">禽易记 v1.2.0</p>
                 <p style="padding: 0 0 10px 0;">家禽批发专用记账系统</p>
                 <p style="padding: 0 0 10px 0; font-size: 12px; color: #666;">© 2025 禽易记</p>
             </div>
@@ -611,7 +1132,7 @@
             <i class="fas fa-home"></i>
             <span>首页</span>
         </div>
-        <div class="nav-item" onclick="showTransactions()">
+        <div class="nav-item" onclick="showTransactionsScreen()">
             <i class="fas fa-exchange-alt"></i>
             <span>交易</span>
         </div>
@@ -619,7 +1140,7 @@
             <i class="fas fa-users"></i>
             <span>客户</span>
         </div>
-        <div class="nav-item" onclick="showReports()">
+        <div class="nav-item" onclick="showReportScreen()">
             <i class="fas fa-chart-bar"></i>
             <span>报表</span>
         </div>
@@ -628,65 +1149,410 @@
             <span>设置</span>
         </div>
     </div>
-    
-    <script>
-        // 设置默认日期为今天
+
+    <!-- 引入JavaScript库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+<script>
+        // 初始化数据模型
+        let appData = {
+            purchases: [],
+            sales: [],
+            customers: [],
+            inventory: [],
+            payments: [], // 新增结账记录
+            suppliers: [], // 供应商记录
+            settings: {
+                lowStockAlert: true,
+                lowStockThreshold: 10,
+                debtReminder: true,
+                debtReminderDays: 7
+            }
+        };
+        
+        // 当前页面状态
+        let currentState = {
+            currentCustomer: null,
+            currentScreen: 'home-screen',
+            inventoryPage: 1,
+            customerPage: 1,
+            transactionPage: 1,
+            itemsPerPage: 10,
+            inventoryFilter: 'all',
+            transactionFilter: 'all',
+            transactionType: 'all',
+            timeFilter: 'all',
+            customerFilter: '',
+            inventorySearch: '',
+            transactionSearch: '',
+            salesChartInstance: null,
+            reportChartInstance: null,
+        };
+
+        // Toast通知系统
+        const toast = {
+            show(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toastEl = document.createElement('div');
+                toastEl.className = `toast toast-${type}`;
+                
+                let icon = '';
+                switch(type) {
+                    case 'success': icon = '<i class="fas fa-check-circle toast-icon"></i>'; break;
+                    case 'error': icon = '<i class="fas fa-times-circle toast-icon"></i>'; break;
+                    case 'warning': icon = '<i class="fas fa-exclamation-triangle toast-icon"></i>'; break;
+                    default: icon = '<i class="fas fa-info-circle toast-icon"></i>';
+                }
+                
+                toastEl.innerHTML = `${icon}${message}`;
+                container.appendChild(toastEl);
+                
+                // 添加CSS动画类
+                setTimeout(() => toastEl.style.opacity = 1, 10);
+                
+                // 3秒后移除
+                setTimeout(() => {
+                    toastEl.style.opacity = 0;
+                    setTimeout(() => container.removeChild(toastEl), 300);
+                }, 3000);
+            },
+            success(message) { this.show(message, 'success'); },
+            error(message) { this.show(message, 'error'); },
+            warning(message) { this.show(message, 'warning'); },
+            info(message) { this.show(message, 'info'); }
+        };
+
+        // 确认对话框
+        const confirmDialog = {
+            show(message, callback) {
+                const dialog = document.getElementById('confirm-dialog');
+                const msgElement = document.getElementById('confirm-message');
+                const okBtn = document.getElementById('confirm-ok');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                
+                msgElement.textContent = message;
+                dialog.style.display = 'flex';
+                
+                // 绑定确认按钮事件
+                const confirmHandler = () => {
+                    dialog.style.display = 'none';
+                    okBtn.removeEventListener('click', confirmHandler);
+                    cancelBtn.removeEventListener('click', cancelHandler);
+                    callback(true);
+                };
+                
+                // 绑定取消按钮事件
+                const cancelHandler = () => {
+                    dialog.style.display = 'none';
+                    okBtn.removeEventListener('click', confirmHandler);
+                    cancelBtn.removeEventListener('click', cancelHandler);
+                    callback(false);
+                };
+                
+                okBtn.addEventListener('click', confirmHandler);
+                cancelBtn.addEventListener('click', cancelHandler);
+            }
+        };
+
+        // 日期格式化函数
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // 金额格式化函数
+        function formatCurrency(amount) {
+            return '¥' + parseFloat(amount).toFixed(2);
+        }
+
+        // 手机号格式化，隐藏中间4位
+        function formatPhone(phone) {
+            if(!phone || phone.length < 7) return phone;
+            return phone.slice(0, 3) + '****' + phone.slice(-4);
+        }
+
+        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        // 应用初始化
+        function initializeApp() {
+            // 设置默认日期为今天
             const today = new Date().toISOString().split('T')[0];
             
-            if(document.getElementById('purchase-date')) {
-                document.getElementById('purchase-date').value = today;
-            }
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                input.value = today;
+            });
             
-            if(document.getElementById('sale-date')) {
-                document.getElementById('sale-date').value = today;
-            }
-            
-            if(document.getElementById('payment-date')) {
-                document.getElementById('payment-date').value = today;
-            }
-            
-            // 检查是否存在本地存储的数据
+            // 初始化本地存储
             initializeLocalStorage();
             
-            // 初始加载数据
+            // 加载数据
+            loadAppData();
+            
+            // 初始显示
             updateDashboard();
             updateCustomerList();
             updatePaymentCustomerList();
-        });
-        
+            
+            // 绑定销售表单中的支付方式显示逻辑
+            document.getElementById('sale-payment').addEventListener('change', function() {
+                const paymentMethodGroup = document.getElementById('payment-method-group');
+                paymentMethodGroup.style.display = this.value === '已结清' ? 'block' : 'none';
+            });
+            
+            // 初始化图表
+            initSalesChart();
+            
+            // 检查低库存和欠款提醒
+            checkLowStockItems();
+            checkUnpaidDebt();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 库存搜索
+            document.getElementById('inventory-search').addEventListener('input', function() {
+                currentState.inventorySearch = this.value.trim().toLowerCase();
+                currentState.inventoryPage = 1;
+                updateInventoryList();
+            });
+            
+            // 客户搜索
+            document.getElementById('customer-search').addEventListener('input', function() {
+                currentState.customerFilter = this.value.trim().toLowerCase();
+                currentState.customerPage = 1;
+                updateCustomerList();
+            });
+            
+            // 交易搜索
+            document.getElementById('transaction-search').addEventListener('input', function() {
+                currentState.transactionSearch = this.value.trim().toLowerCase();
+                currentState.transactionPage = 1;
+                updateTransactionsList();
+            });
+            
+            // 库存筛选标签点击
+            document.querySelectorAll('#inventory-screen .filter-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    currentState.inventoryFilter = filter;
+                    
+                    document.querySelectorAll('#inventory-screen .filter-tag').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    currentState.inventoryPage = 1;
+                    updateInventoryList();
+                });
+            });
+            
+            // 交易类型筛选按钮点击
+            document.querySelectorAll('#transactions-screen .toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    currentState.transactionType = type;
+                    
+                    document.querySelectorAll('#transactions-screen .toggle-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    currentState.transactionPage = 1;
+                    updateTransactionsList();
+                });
+            });
+            
+            // 交易时间筛选标签点击
+            document.querySelectorAll('#transactions-screen .filter-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    currentState.timeFilter = filter;
+                    
+                    document.querySelectorAll('#transactions-screen .filter-tag').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    currentState.transactionPage = 1;
+                    updateTransactionsList();
+                });
+            });
+            
+            // 报表图表类型切换
+            document.querySelectorAll('#report-screen .toggle-btn[data-chart]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const chartType = this.getAttribute('data-chart');
+                    
+                    document.querySelectorAll('#report-screen .toggle-btn[data-chart]').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    updateReportChart(chartType);
+                });
+            });
+            
+            // 报表时间周期切换
+            document.querySelectorAll('#report-screen .filter-tag[data-period]').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const period = this.getAttribute('data-period');
+                    
+                    document.querySelectorAll('#report-screen .filter-tag[data-period]').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const activeChartBtn = document.querySelector('#report-screen .toggle-btn[data-chart].active');
+                    const chartType = activeChartBtn.getAttribute('data-chart');
+                    
+                    updateReportChart(chartType, period);
+                });
+            });
+            
+            // 排行榜类型切换
+            document.querySelectorAll('#report-screen .toggle-btn[data-rank]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rankType = this.getAttribute('data-rank');
+                    
+                    document.querySelectorAll('#report-screen .toggle-btn[data-rank]').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    updateRankList(rankType);
+                });
+            });
+            
+            // 客户详情页交易筛选
+            document.querySelectorAll('#customer-detail-screen .filter-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    
+                    document.querySelectorAll('#customer-detail-screen .filter-tag').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    updateCustomerTransactions(currentState.currentCustomer, filter);
+                });
+            });
+            
+            // 趋势周期下拉框变化
+            document.getElementById('trend-period').addEventListener('change', function() {
+                updateSalesTrend();
+            });
+            
+            // 设置页面的复选框逻辑
+            document.getElementById('setting-low-stock').addEventListener('change', function() {
+                document.getElementById('low-stock-threshold-group').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            document.getElementById('setting-debt-reminder').addEventListener('change', function() {
+                document.getElementById('debt-reminder-days-group').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // 初始设置显示状态
+            document.getElementById('low-stock-threshold-group').style.display = 
+                document.getElementById('setting-low-stock').checked ? 'block' : 'none';
+            
+            document.getElementById('debt-reminder-days-group').style.display = 
+                document.getElementById('setting-debt-reminder').checked ? 'block' : 'none';
+        }
+
         // 初始化本地存储
         function initializeLocalStorage() {
             if(!localStorage.getItem('poultryData')) {
-                const initialData = {
-                    purchases: [],
-                    sales: [],
-                    customers: [],
-                    inventory: []
-                };
-                localStorage.setItem('poultryData', JSON.stringify(initialData));
+                localStorage.setItem('poultryData', JSON.stringify(appData));
             }
         }
-        
-        // 切换不同屏幕
+
+        // 加载数据
+        function loadAppData() {
+            const data = JSON.parse(localStorage.getItem('poultryData'));
+            
+            // 兼容旧版数据结构
+            appData.purchases = data.purchases || [];
+            appData.sales = data.sales || [];
+            appData.customers = data.customers || [];
+            appData.inventory = data.inventory || [];
+            appData.payments = data.payments || [];
+            appData.suppliers = data.suppliers || [];
+            
+            // 加载设置
+            if(data.settings) {
+                appData.settings = data.settings;
+                
+                // 更新界面设置
+                document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
+                document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
+                document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
+                document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
+            }
+        }
+
+        // 保存数据到本地存储
+        function saveAppData() {
+            localStorage.setItem('poultryData', JSON.stringify(appData));
+        }
+
+        // 切换显示屏幕
         function showScreen(screenId) {
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(screen => {
+            // 隐藏所有屏幕
+            document.querySelectorAll('.screen').forEach(screen => {
                 screen.style.display = 'none';
             });
             
+            // 显示目标屏幕
             document.getElementById(screenId).style.display = 'block';
             
+            // 保存当前屏幕ID
+            currentState.currentScreen = screenId;
+            
             // 更新导航栏高亮
+            updateNavigation(screenId);
+            
+            // 显示/隐藏返回按钮
+            const backBtn = document.getElementById('header-back-btn');
+            backBtn.style.display = screenId === 'home-screen' ? 'none' : 'block';
+            
+            // 根据屏幕ID执行特定逻辑
+            if(screenId === 'inventory-screen') {
+                updateInventoryList();
+            } else if(screenId === 'customer-form') {
+                updateCustomerList();
+            } else if(screenId === 'payment-form') {
+                updatePaymentCustomerList();
+                updateUnpaidBillsList();
+            } else if(screenId === 'report-screen') {
+                initReportChart();
+                updateRankList('product');
+                updateDebtStats();
+            } else if(screenId === 'transactions-screen') {
+                updateTransactionsList();
+            } else if(screenId.includes('settings')) {
+                // 加载设置值
+                document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
+                document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
+                document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
+                document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
+            }
+        }
+
+        // 更新导航栏高亮
+        function updateNavigation(screenId) {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 item.classList.remove('active');
             });
             
-            // 根据屏幕ID高亮相应的导航项
+            // 根据屏幕ID确定高亮导航项
             if(screenId === 'home-screen') {
                 navItems[0].classList.add('active');
-            } else if(screenId.includes('sale') || screenId.includes('purchase') || screenId === 'transactions-screen') {
+            } else if(screenId === 'transactions-screen' || screenId.includes('purchase') || screenId.includes('sale')) {
                 navItems[1].classList.add('active');
             } else if(screenId.includes('customer')) {
                 navItems[2].classList.add('active');
@@ -695,434 +1561,111 @@
             } else if(screenId.includes('settings')) {
                 navItems[4].classList.add('active');
             }
-            
-            // 如果是结账界面，更新客户欠款
-            if(screenId === 'payment-form') {
-                updateSelectedCustomerDebt();
-            }
         }
-        
-        // 显示交易页面
-        function showTransactions() {
-            alert('交易记录功能正在开发中');
-        }
-        
-        // 显示报表页面
-        function showReports() {
-            alert('报表功能正在开发中');
-        }
-        
-        // 保存数据
-        function saveData(type) {
-            // 获取现有数据
-            let data = JSON.parse(localStorage.getItem('poultryData'));
-            
-            if(type === 'purchase') {
-                const productName = document.getElementById('purchase-product').value.trim();
-                const quantity = parseInt(document.getElementById('purchase-quantity').value);
-                const price = parseFloat(document.getElementById('purchase-price').value);
-                
-                // 验证数据
-                if(!productName || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-                    alert('请填写有效的商品、数量和价格信息！');
-                    return;
-                }
-                
-                const purchase = {
-                    product: productName,
-                    quantity: quantity,
-                    price: price,
-                    supplier: document.getElementById('purchase-supplier').value,
-                    date: document.getElementById('purchase-date').value,
-                    notes: document.getElementById('purchase-notes').value,
-                    timestamp: new Date().getTime()
-                };
-                
-                // 更新库存
-                const inventoryIndex = data.inventory.findIndex(item => item.product === purchase.product);
-                if(inventoryIndex !== -1) {
-                    // 更新现有商品库存
-                    const oldStock = data.inventory[inventoryIndex].stock;
-                    const oldCost = data.inventory[inventoryIndex].cost;
-                    const newStock = oldStock + purchase.quantity;
-                    
-                    // 计算加权平均成本
-                    const totalCost = oldStock * oldCost + purchase.quantity * purchase.price;
-                    const weightedCost = totalCost / newStock;
-                    
-                    data.inventory[inventoryIndex].stock = newStock;
-                    data.inventory[inventoryIndex].cost = Math.round(weightedCost * 10) / 10;
-                } else {
-                    // 添加新商品
-                    data.inventory.push({
-                        product: purchase.product,
-                        stock: purchase.quantity,
-                        cost: purchase.price,
-                        price: Math.round(purchase.price * 1.12 * 10) / 10 // 默认加价12%
-                    });
-                }
-                
-                // 添加到进货记录
-                data.purchases.push(purchase);
-                localStorage.setItem('poultryData', JSON.stringify(data));
-                
-                alert('进货记录保存成功!');
-                document.getElementById('new-purchase').reset();
-                showScreen('home-screen');
-                updateDashboard();
-                
-            } else if(type === 'sale') {
-                const customerName = document.getElementById('sale-customer').value.trim();
-                const productName = document.getElementById('sale-product').value.trim();
-                const quantity = parseInt(document.getElementById('sale-quantity').value);
-                const price = parseFloat(document.getElementById('sale-price').value);
-                
-                // 验证数据
-                if(!customerName || !productName || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-                    alert('请填写有效的客户、商品、数量和价格信息！');
-                    return;
-                }
-                
-                // 检查客户是否存在，如果不存在则提示添加
-                const customerExists = data.customers.some(c => c.name === customerName);
-                if(!customerExists) {
-                    if(confirm(`客户"${customerName}"不存在，是否添加新客户？`)) {
-                        showScreen('customer-form');
-                        document.getElementById('customer-name').value = customerName;
-                        return;
-                    }
-                }
-                
-                const sale = {
-                    customer: customerName,
-                    product: productName,
-                    quantity: quantity,
-                    price: price,
-                    payment: document.getElementById('sale-payment').value,
-                    date: document.getElementById('sale-date').value,
-                    notes: document.getElementById('sale-notes').value,
-                    timestamp: new Date().getTime()
-                };
-                
-                // 检查库存是否足够
-                const inventoryIndex = data.inventory.findIndex(item => item.product === sale.product);
-                if(inventoryIndex === -1) {
-                    alert(`商品"${sale.product}"尚未进货，请先添加进货记录！`);
-                    return;
-                }
-                
-                if(data.inventory[inventoryIndex].stock < sale.quantity) {
-                    alert(`库存不足，当前${sale.product}库存为${data.inventory[inventoryIndex].stock}个！`);
-                    return;
-                }
-                
-                // 更新库存
-                data.inventory[inventoryIndex].stock -= sale.quantity;
-                
-                // 添加到销售记录
-                data.sales.push(sale);
-                localStorage.setItem('poultryData', JSON.stringify(data));
-                
-                alert('销售记录保存成功!');
-                document.getElementById('new-sale').reset();
-                showScreen('home-screen');
-                updateDashboard();
-                
-            } else if(type === 'customer') {
-                const customerName = document.getElementById('customer-name').value.trim();
-                const contact = document.getElementById('customer-contact').value.trim();
-                const phone = document.getElementById('customer-phone').value.trim();
-                
-                // 验证必填字段
-                if(!customerName || !contact || !phone) {
-                    alert('请填写客户名称、联系人和联系电话!');
-                    return;
-                }
-                
-                const customer = {
-                    name: customerName,
-                    contact: contact,
-                    phone: phone,
-                    address: document.getElementById('customer-address').value,
-                    notes: document.getElementById('customer-notes').value
-                };
-                
-                // 检查是否已存在同名客户
-                const exists = data.customers.some(c => c.name === customer.name);
-                if(exists) {
-                    if(!confirm('已存在同名客户，是否覆盖?')) {
-                        return;
-                    }
-                    // 更新现有客户
-                    const index = data.customers.findIndex(c => c.name === customer.name);
-                    data.customers[index] = customer;
-                } else {
-                    // 添加新客户
-                    data.customers.push(customer);
-                }
-                
-                localStorage.setItem('poultryData', JSON.stringify(data));
-                
-                alert('客户信息保存成功!');
-                document.getElementById('new-customer').reset();
-                updateCustomerList();
-                updatePaymentCustomerList();
-                showScreen('home-screen');
-            }
-        }
-        
-        // 处理客户结账
-        function processPayment() {
-            const customerSelect = document.getElementById('payment-customer');
-            if(customerSelect.options.length === 0) {
-                alert('没有可选客户，请先添加客户和销售记录！');
-                return;
-            }
-            
-            const customer = customerSelect.value;
-            const amount = parseFloat(document.getElementById('payment-amount').value);
-            const method = document.getElementById('payment-method').value;
-            const date = document.getElementById('payment-date').value;
-            const notes = document.getElementById('payment-notes').value;
-            
-            if(!customer || isNaN(amount) || amount <= 0) {
-                alert('请选择客户并输入有效的结账金额!');
-                return;
-            }
-            
-            // 获取数据
-            let data = JSON.parse(localStorage.getItem('poultryData'));
-            
-            // 查找该客户的所有未结清销售记录
-            const unpaidSales = data.sales.filter(sale => 
-                sale.customer === customer && sale.payment !== '已结清'
-            );
-            
-            if(unpaidSales.length === 0) {
-                alert('该客户没有未结清的账款!');
-                return;
-            }
-            
-            // 处理结账：将最早的未结清销售记录标记为已结清，直到结清金额用完
-            let remainingAmount = amount;
-            let updatedSales = false;
-            
-            unpaidSales.sort((a, b) => a.timestamp - b.timestamp); // 按时间排序
-            
-            for(let i = 0; i < unpaidSales.length; i++) {
-                const sale = unpaidSales[i];
-                const saleAmount = sale.price * sale.quantity;
-                const index = data.sales.findIndex(s => s.timestamp === sale.timestamp);
-                
-                if(sale.payment === '未结账') {
-                    if(remainingAmount >= saleAmount) {
-                        // 完全结清这笔销售
-                        data.sales[index].payment = '已结清';
-                        remainingAmount -= saleAmount;
-                        updatedSales = true;
-                    } else {
-                        // 部分结清这笔销售
-                        data.sales[index].payment = '部分结账';
-                        updatedSales = true;
-                        break;
-                    }
-                } else if(sale.payment === '部分结账') {
-                    // 简化处理，假设部分结账为50%
-                    const remainingDebt = saleAmount * 0.5;
-                    if(remainingAmount >= remainingDebt) {
-                        // 完全结清这笔销售
-                        data.sales[index].payment = '已结清';
-                        remainingAmount -= remainingDebt;
-                        updatedSales = true;
-                    }
-                }
-                
-                if(remainingAmount <= 0) break;
-            }
-            
-            if(!updatedSales) {
-                alert('结账处理出错!');
-                return;
-            }
-            
-            // 保存处理后的数据
-            localStorage.setItem('poultryData', JSON.stringify(data));
-            
-            alert('结账处理成功!');
-            document.getElementById('new-payment').reset();
-            document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
-            updateDashboard();
-            updateSelectedCustomerDebt();
-            showScreen('home-screen');
-        }
-        
-        // 设置应用为全屏模式（仅在iOS Safari上有效）
-        function setFullscreen() {
-            if(('standalone' in navigator) && !navigator.standalone) {
-                alert('添加到主屏幕方法：\n1. 点击底部中间的分享按钮\n2. 滚动并选择"添加到主屏幕"\n3. 点击"添加"\n\n添加后可获得全屏体验，数据会保存在本地');
-            }
-        }
-        
-        // 更新客户列表
-        function updateCustomerList() {
-            const customerList = document.getElementById('customer-list');
-            const data = JSON.parse(localStorage.getItem('poultryData'));
-            
-            // 清空现有列表
-            customerList.innerHTML = '';
-            
-            if(data.customers.length === 0) {
-                customerList.innerHTML = '<p style="padding: 10px; text-align: center; color: #666;">还没有客户，请添加新客户</p>';
-                return;
-            }
-            
-            // 计算客户欠款
-            const customerDebt = calculateCustomerDebt();
-            
-            // 添加客户列表项
-            data.customers.forEach(customer => {
-                const debt = customerDebt[customer.name] || 0;
-                const debtHtml = debt > 0 ? 
-                    `<span class="badge badge-danger">未结清: ¥${debt.toFixed(2)}</span>` : 
-                    `<span class="badge badge-success">无欠款</span>`;
-                
-                customerList.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${customer.name}</div>
-                            <div class="item-detail">联系人: ${customer.contact} (${formatPhone(customer.phone)})</div>
-                        </div>
-                        <div class="item-value">
-                            ${debt > 0 ? `¥${debt.toFixed(2)}` : ''}
-                            ${debtHtml}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        
-        // 更新结账页面的客户下拉列表
-        function updatePaymentCustomerList() {
-            const customerSelect = document.getElementById('payment-customer');
-            const data = JSON.parse(localStorage.getItem('poultryData'));
-            
-            // 清空现有选项
-            customerSelect.innerHTML = '';
-            
-            // 计算客户欠款
-            const customerDebt = calculateCustomerDebt();
-            
-            // 添加客户选项，只添加有欠款的客户
-            data.customers.forEach(customer => {
-                const debt = customerDebt[customer.name] || 0;
-                if(debt > 0) {
-                    const option = document.createElement('option');
-                    option.value = customer.name;
-                    option.textContent = `${customer.name} (欠款: ¥${debt.toFixed(2)})`;
-                    customerSelect.appendChild(option);
-                }
-            });
-        }
-        
-        // 更新首页仪表盘
+// 更新首页仪表盘
         function updateDashboard() {
-            const data = JSON.parse(localStorage.getItem('poultryData'));
-            
-            // 更新首页的库存和交易展示
-            updateInventoryDisplay();
-            updateTransactionsDisplay();
-            
-            // 计算今日销售额和未结账款总额
+            // 更新今日销售额和未结账款
             const today = new Date().toISOString().split('T')[0];
             
-            // 今日销售额
-            const todaySales = data.sales.filter(sale => sale.date === today);
+            // 计算今日销售额
+            const todaySales = appData.sales.filter(sale => sale.date === today);
             const todaySalesAmount = todaySales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0);
             
-            // 未结账款总额
+            // 计算未结账款总额
             const totalDebt = Object.values(calculateCustomerDebt()).reduce((sum, debt) => sum + debt, 0);
             
-            // 更新统计数据
-            document.querySelector('.stats-container .stat-box:nth-child(1) .stat-value').textContent = `¥${todaySalesAmount.toFixed(2)}`;
-            document.querySelector('.stats-container .stat-box:nth-child(2) .stat-value').textContent = `¥${totalDebt.toFixed(2)}`;
+            // 更新界面显示
+            document.querySelector('.stats-container .stat-box:nth-child(1) .stat-value').textContent = formatCurrency(todaySalesAmount);
+            document.querySelector('.stats-container .stat-box:nth-child(2) .stat-value').textContent = formatCurrency(totalDebt);
+            
+            // 更新库存显示
+            updateInventoryDisplay();
+            
+            // 更新最近交易显示
+            updateTransactionsDisplay();
+            
+            // 更新销售趋势
+            updateSalesTrend();
         }
         
-        // 更新库存显示
+        // 更新首页库存显示
         function updateInventoryDisplay() {
-            const data = JSON.parse(localStorage.getItem('poultryData'));
-            const inventoryCard = document.querySelector('#home-screen .card:nth-child(3)');
-            const cardTitle = inventoryCard.querySelector('.card-title');
+            const inventoryList = document.getElementById('inventory-list');
             
-            // 清空现有列表，保留标题
-            while(inventoryCard.childElementCount > 1) {
-                inventoryCard.removeChild(inventoryCard.lastChild);
-            }
+            // 清空现有内容
+            inventoryList.innerHTML = '';
             
-            if(data.inventory.length === 0) {
-                inventoryCard.innerHTML += '<p style="padding: 10px; text-align: center; color: #666;">还没有库存记录，请添加进货</p>';
+            if(appData.inventory.length === 0) {
+                inventoryList.innerHTML = '<p class="empty-hint">暂无库存数据，请先添加商品进货</p>';
                 return;
             }
             
-            // 添加库存列表项
-            data.inventory.slice(0, 4).forEach(item => {
-                // 计算库存百分比以显示进度条
-                const stockPercentage = Math.min(Math.max(item.stock / 10, 0) * 10, 100);
-
-               let progressClass = 'progress-green';
+            // 按库存量排序，少的在前面
+            const sortedInventory = [...appData.inventory].sort((a, b) => a.stock - b.stock);
+            
+            // 只显示前4项
+            const displayItems = sortedInventory.slice(0, 4);
+            
+            displayItems.forEach(item => {
+                // 计算库存百分比显示进度条
+                const stockPercentage = Math.min(Math.max(item.stock / 20, 0) * 100, 100);
                 
-                if(stockPercentage < 35) {
+                let progressClass = 'progress-green';
+                if(item.stock <= appData.settings.lowStockThreshold) {
                     progressClass = 'progress-orange';
-                } else if(stockPercentage < 60) {
+                } else if(item.stock <= appData.settings.lowStockThreshold * 2) {
                     progressClass = 'progress-yellow';
                 }
                 
-                inventoryCard.innerHTML += `
+                // 低库存标记
+                const lowStockLabel = item.stock <= appData.settings.lowStockThreshold ? 
+                    '<span class="low-stock">库存不足</span>' : '';
+                
+                inventoryList.innerHTML += `
                     <div class="list-item">
                         <div class="item-info">
-                            <div class="item-name">${item.product}</div>
+                            <div class="item-name">${item.product} ${lowStockLabel}</div>
                             <div class="item-detail">库存: ${item.stock}个</div>
                             <div class="progress-bar">
                                 <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
                             </div>
                         </div>
                         <div class="item-value">
-                            ¥${item.price.toFixed(2)}/个
+                            ${formatCurrency(item.price)}/个
                         </div>
                     </div>
                 `;
             });
             
-            // 如果有更多商品，显示查看更多提示
-            if(data.inventory.length > 4) {
-                inventoryCard.innerHTML += `
+            // 如果有更多项，显示"查看更多"
+            if(appData.inventory.length > 4) {
+                inventoryList.innerHTML += `
                     <div style="text-align: center; padding: 5px 0;">
-                        <a href="#" onclick="showScreen('inventory-screen')">查看更多 (${data.inventory.length - 4})</a>
+                        <a href="#" onclick="showInventoryScreen()">查看更多 (${appData.inventory.length - 4})</a>
                     </div>
                 `;
             }
         }
         
-        // 更新最近交易显示
+        // 更新首页最近交易显示
         function updateTransactionsDisplay() {
-            const data = JSON.parse(localStorage.getItem('poultryData'));
-            const transactionsCard = document.querySelector('#home-screen .card:nth-child(4)');
-            const cardTitle = transactionsCard.querySelector('.card-title');
+            const transactionsContainer = document.getElementById('recent-transactions');
             
-            // 清空现有列表，保留标题
-            while(transactionsCard.childElementCount > 1) {
-                transactionsCard.removeChild(transactionsCard.lastChild);
-            }
+            // 清空现有内容
+            transactionsContainer.innerHTML = '';
             
-            if(data.sales.length === 0) {
-                transactionsCard.innerHTML += '<p style="padding: 10px; text-align: center; color: #666;">还没有交易记录，请添加销售</p>';
+            if(appData.sales.length === 0) {
+                transactionsContainer.innerHTML = '<p class="empty-hint">暂无交易记录，请先添加销售数据</p>';
                 return;
             }
             
             // 按时间排序，最新的在前面
-            const recentSales = [...data.sales].sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
+            const sortedSales = [...appData.sales].sort((a, b) => new Date(b.date) - new Date(a.date) || b.timestamp - a.timestamp);
             
-            // 添加最近交易列表项
-            recentSales.forEach(sale => {
+            // 只显示前3项
+            const displayItems = sortedSales.slice(0, 3);
+            
+            displayItems.forEach(sale => {
                 let badgeClass = 'badge-success';
                 if(sale.payment === '未结账') {
                     badgeClass = 'badge-danger';
@@ -1130,50 +1673,1344 @@
                     badgeClass = 'badge-warning';
                 }
                 
-                const totalAmount = (sale.price * sale.quantity).toFixed(2);
+                const totalAmount = sale.price * sale.quantity;
                 
-                transactionsCard.innerHTML += `
+                transactionsContainer.innerHTML += `
                     <div class="list-item">
                         <div class="item-info">
                             <div class="item-name">${sale.customer}</div>
-                            <div class="item-detail">销售 ${sale.product} x${sale.quantity}</div>
+                            <div class="item-detail">${formatDate(sale.date)} · ${sale.product} x${sale.quantity}</div>
                         </div>
                         <div class="item-value">
-                            ¥${totalAmount}
+                            ${formatCurrency(totalAmount)}
                             <span class="badge ${badgeClass}">${sale.payment}</span>
                         </div>
                     </div>
                 `;
             });
             
-            // 如果有更多交易，显示查看更多提示
-            if(data.sales.length > 3) {
-                transactionsCard.innerHTML += `
+            // 如果有更多项，显示"查看更多"
+            if(appData.sales.length > 3) {
+                transactionsContainer.innerHTML += `
                     <div style="text-align: center; padding: 5px 0;">
-                        <a href="#" onclick="showScreen('transactions-screen')">查看更多 (${data.sales.length - 3})</a>
+                        <a href="#" onclick="showTransactionsScreen()">查看更多 (${appData.sales.length - 3})</a>
                     </div>
                 `;
             }
         }
         
+        // 更新销售趋势图表
+        function updateSalesTrend() {
+            const period = document.getElementById('trend-period').value;
+            const canvas = document.getElementById('sales-chart');
+            
+            if(!canvas || appData.sales.length === 0) {
+                return;
+            }
+            
+            // 准备图表数据
+            const labels = [];
+            const salesData = [];
+            const profitData = [];
+            
+            const now = new Date();
+            let start, end, format, interval;
+            
+            if(period === 'week') {
+                // 本周数据：显示最近7天
+                start = new Date(now);
+                start.setDate(now.getDate() - 6);
+                end = now;
+                format = 'day'; // 按天显示
+                interval = 1;   // 每1天一个数据点
+            } else if(period === 'month') {
+                // 本月数据：显示最近30天
+                start = new Date(now);
+                start.setDate(now.getDate() - 29);
+                end = now;
+                format = 'day'; // 按天显示
+                interval = 3;   // 每3天一个数据点
+            } else if(period === 'year') {
+                // 本年数据：显示最近12个月
+                start = new Date(now);
+                start.setMonth(now.getMonth() - 11);
+                end = now;
+                format = 'month'; // 按月显示
+                interval = 1;     // 每1个月一个数据点
+            }
+            
+            // 生成日期标签和初始化数据
+            const current = new Date(start);
+            while(current <= end) {
+                if(format === 'day') {
+                    // 按天显示
+                    if((current.getDate() - start.getDate()) % interval === 0 || current.getTime() === end.getTime()) {
+                        const dateStr = formatDate(current);
+                        const shortDate = dateStr.slice(5); // 只显示月-日
+                        
+                        labels.push(shortDate);
+                        salesData.push(0);
+                        profitData.push(0);
+                    }
+                    current.setDate(current.getDate() + 1);
+                } else if(format === 'month') {
+                    // 按月显示
+                    labels.push(`${current.getFullYear()}/${current.getMonth() + 1}`);
+                    salesData.push(0);
+                    profitData.push(0);
+                    current.setMonth(current.getMonth() + interval);
+                }
+            }
+            
+            // 计算各日期的销售额和利润
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                let index = -1;
+                
+                if(format === 'day') {
+                    // 查找对应的日期索引
+                    const dateStr = formatDate(saleDate);
+                    const shortDate = dateStr.slice(5); // 只显示月-日
+                    index = labels.indexOf(shortDate);
+                } else if(format === 'month') {
+                    // 查找对应的月份索引
+                    const monthLabel = `${saleDate.getFullYear()}/${saleDate.getMonth() + 1}`;
+                    index = labels.indexOf(monthLabel);
+                }
+                
+                if(index !== -1) {
+                    // 找到相应库存商品计算利润
+                    const saleAmount = sale.price * sale.quantity;
+                    const inventoryItem = appData.inventory.find(item => item.product === sale.product);
+                    const cost = inventoryItem ? inventoryItem.cost : 0;
+                    const profit = saleAmount - (cost * sale.quantity);
+                    
+                    salesData[index] += saleAmount;
+                    profitData[index] += profit;
+                }
+            });
+            
+            // 创建或更新图表
+            if(currentState.salesChartInstance) {
+                currentState.salesChartInstance.destroy();
+            }
+            
+            currentState.salesChartInstance = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '销售额',
+                            data: salesData,
+                            borderColor: '#4a86e8',
+                            backgroundColor: 'rgba(74, 134, 232, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: '利润',
+                            data: profitData,
+                            borderColor: '#34a853',
+                            backgroundColor: 'rgba(52, 168, 83, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value;
+                                }
+                            }
+                        }
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return data.datasets[tooltipItem.datasetIndex].label + ': ¥' + tooltipItem.yLabel.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 保存表单数据
+        function saveData(type) {
+            if(type === 'purchase') {
+                savePurchaseData();
+            } else if(type === 'sale') {
+                saveSaleData();
+            } else if(type === 'customer') {
+                saveCustomerData();
+            }
+        }
+        
+        // 保存进货数据
+        function savePurchaseData() {
+            const productInput = document.getElementById('purchase-product');
+            const product = productInput.value.trim();
+            const quantity = parseInt(document.getElementById('purchase-quantity').value);
+            const price = parseFloat(document.getElementById('purchase-price').value);
+            const supplier = document.getElementById('purchase-supplier').value.trim();
+            const date = document.getElementById('purchase-date').value;
+            const notes = document.getElementById('purchase-notes').value.trim();
+            
+            // 验证数据
+            if(!product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+                toast.error('请填写有效的商品、数量和价格信息！');
+                return;
+            }
+            
+            // 创建进货记录
+            const purchase = {
+                product,
+                quantity,
+                price,
+                supplier,
+                date,
+                notes,
+                timestamp: Date.now()
+            };
+            
+            // 保存供应商
+            if(supplier && !appData.suppliers.includes(supplier)) {
+                appData.suppliers.push(supplier);
+            }
+            
+            // 更新库存
+            const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
+            if(inventoryIndex !== -1) {
+                // 更新现有商品库存
+                const inventory = appData.inventory[inventoryIndex];
+                const oldStock = inventory.stock;
+                const oldCost = inventory.cost;
+                const newStock = oldStock + quantity;
+                
+                // 计算加权平均成本
+                const totalCost = oldStock * oldCost + quantity * price;
+                const weightedCost = totalCost / newStock;
+                
+                appData.inventory[inventoryIndex].stock = newStock;
+                appData.inventory[inventoryIndex].cost = Math.round(weightedCost * 10) / 10;
+            } else {
+                // 添加新商品
+                const defaultMarkupPercent = 15; // 默认加价15%
+                const suggestedPrice = Math.round(price * (1 + defaultMarkupPercent / 100) * 10) / 10;
+                
+                appData.inventory.push({
+                    product,
+                    stock: quantity,
+                    cost: price,
+                    price: suggestedPrice
+                });
+            }
+            
+            // 添加到进货记录
+            appData.purchases.push(purchase);
+            
+            // 保存数据
+            saveAppData();
+            
+            // 显示成功消息
+            toast.success('进货记录保存成功!');
+            
+            // 重置表单
+            document.getElementById('new-purchase').reset();
+            document.getElementById('purchase-date').value = new Date().toISOString().split('T')[0];
+            
+            // 返回主页并更新显示
+            showScreen('home-screen');
+        }
+        
+        // 保存销售数据
+        function saveSaleData() {
+            const customerInput = document.getElementById('sale-customer');
+            const customer = customerInput.value.trim();
+            const productSelect = document.getElementById('sale-product');
+            const product = productSelect.value;
+            const quantity = parseInt(document.getElementById('sale-quantity').value);
+            const price = parseFloat(document.getElementById('sale-price').value);
+            const payment = document.getElementById('sale-payment').value;
+            const date = document.getElementById('sale-date').value;
+            const notes = document.getElementById('sale-notes').value.trim();
+            
+            // 验证数据
+            if(!customer || !product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+                toast.error('请填写有效的客户、商品、数量和价格信息！');
+                return;
+            }
+            
+            // 检查客户是否存在
+            const customerExists = appData.customers.some(c => c.name === customer);
+            if(!customerExists) {
+                if(confirm(`客户"${customer}"不存在，是否添加新客户？`)) {
+                    showScreen('customer-form');
+                    document.getElementById('customer-name').value = customer;
+                    return;
+                }
+            }
+            
+            // 检查库存是否足够
+            const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
+            if(inventoryIndex === -1) {
+                toast.error(`商品"${product}"不存在，请先进货！`);
+                return;
+            }
+            
+            if(appData.inventory[inventoryIndex].stock < quantity) {
+                toast.error(`库存不足，当前${product}库存为${appData.inventory[inventoryIndex].stock}个！`);
+                return;
+            }
+            
+            // 获取支付方式
+            let paymentMethod = '';
+            if(payment === '已结清') {
+                paymentMethod = document.getElementById('sale-payment-method').value;
+            }
+            
+            // 创建销售记录
+            const sale = {
+                customer,
+                product,
+                quantity,
+                price,
+                payment,
+                paymentMethod,
+                date,
+                notes,
+                timestamp: Date.now()
+            };
+            
+            // 更新库存
+            appData.inventory[inventoryIndex].stock -= quantity;
+            
+            // 添加到销售记录
+            appData.sales.push(sale);
+            
+            // 保存数据
+            saveAppData();
+            
+            // 显示成功消息
+            toast.success('销售记录保存成功!');
+            
+            // 重置表单
+            document.getElementById('new-sale').reset();
+            document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
+            
+            // 返回主页并更新显示
+            showScreen('home-screen');
+        }
+        
+        // 保存客户数据
+        function saveCustomerData() {
+            const name = document.getElementById('customer-name').value.trim();
+            const contact = document.getElementById('customer-contact').value.trim();
+            const phone = document.getElementById('customer-phone').value.trim();
+            const address = document.getElementById('customer-address').value.trim();
+            const notes = document.getElementById('customer-notes').value.trim();
+            
+            // 验证必填字段
+            if(!name) {
+                toast.error('请填写客户名称!');
+                return;
+            }
+            
+            // 创建客户对象
+            const customer = {
+                name,
+                contact,
+                phone,
+                address,
+                notes
+            };
+            
+            // 检查是否已存在同名客户
+            const existingIndex = appData.customers.findIndex(c => c.name === name);
+            if(existingIndex !== -1) {
+                if(confirm('已存在同名客户，是否覆盖?')) {
+                    // 更新现有客户
+                    appData.customers[existingIndex] = customer;
+                } else {
+                    return;
+                }
+            } else {
+                // 添加新客户
+                appData.customers.push(customer);
+            }
+            
+            // 保存数据
+            saveAppData();
+            
+            // 显示成功消息
+            toast.success('客户信息保存成功!');
+            
+            // 重置表单
+            document.getElementById('new-customer').reset();
+            
+            // 更新客户列表并滚动到顶部
+            updateCustomerList();
+            document.querySelector('#customer-form .container').scrollTop = 0;
+        }
+        
+        // 更新销售表单商品单价
+        function updateProductPrice() {
+            const productSelect = document.getElementById('sale-product');
+            const priceInput = document.getElementById('sale-price');
+            const product = productSelect.value;
+            
+            if(product) {
+                const inventoryItem = appData.inventory.find(item => item.product === product);
+                if(inventoryItem) {
+                    priceInput.value = inventoryItem.price;
+                    updateTotalPrice();
+                }
+            }
+        }
+        
+        // 更新销售表单总价
+        function updateTotalPrice() {
+            const quantityInput = document.getElementById('sale-quantity');
+            const priceInput = document.getElementById('sale-price');
+            const totalInput = document.getElementById('sale-total');
+            
+            const quantity = parseInt(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            
+            totalInput.value = (quantity * price).toFixed(2);
+        }
+        
+        // 显示库存页面
+        function showInventoryScreen() {
+            currentState.inventoryPage = 1;
+            currentState.inventoryFilter = 'all';
+            currentState.inventorySearch = '';
+            
+            // 重置筛选标签
+            document.querySelectorAll('#inventory-screen .filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            document.querySelector('#inventory-screen .filter-tag[data-filter="all"]').classList.add('active');
+            
+            // 清空搜索框
+            document.getElementById('inventory-search').value = '';
+            
+            showScreen('inventory-screen');
+        }
+        
+        // 显示交易记录页面
+        function showTransactionsScreen() {
+            currentState.transactionPage = 1;
+            currentState.transactionType = 'all';
+            currentState.timeFilter = 'all';
+            currentState.transactionSearch = '';
+            
+            // 重置筛选标签
+            document.querySelectorAll('#transactions-screen .toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('#transactions-screen .toggle-btn[data-type="all"]').classList.add('active');
+            
+            document.querySelectorAll('#transactions-screen .filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            document.querySelector('#transactions-screen .filter-tag[data-filter="all"]').classList.add('active');
+            
+            // 清空搜索框
+            document.getElementById('transaction-search').value = '';
+            
+            showScreen('transactions-screen');
+        }
+        
+        // 显示报表页面
+        function showReportScreen() {
+            showScreen('report-screen');
+        }
+        
+        // 显示客户详情页面
+        function showCustomerDetail(customerName) {
+            const customer = appData.customers.find(c => c.name === customerName);
+            if(!customer) {
+                toast.error('找不到客户信息!');
+                return;
+            }
+            
+            currentState.currentCustomer = customerName;
+            
+            // 更新客户详情
+            document.getElementById('detail-customer-name').textContent = customer.name;
+            
+            const detailContainer = document.getElementById('customer-detail-info');
+            detailContainer.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <p><strong>联系人:</strong> ${customer.contact || '未设置'}</p>
+                    <p><strong>电话:</strong> ${customer.phone || '未设置'}</p>
+                    <p><strong>地址:</strong> ${customer.address || '未设置'}</p>
+                    ${customer.notes ? `<p><strong>备注:</strong> ${customer.notes}</p>` : ''}
+                </div>
+            `;
+            
+            // 更新欠款明细
+            updateCustomerDebtList(customerName);
+            
+            // 更新交易历史
+            updateCustomerTransactions(customerName, 'all');
+            
+            // 更新结账记录
+            updateCustomerPayments(customerName);
+            
+            showScreen('customer-detail-screen');
+        }
+        
+        // 更新客户欠款明细
+        function updateCustomerDebtList(customerName) {
+            const container = document.getElementById('customer-debt-list');
+            
+            // 筛选该客户的未结清销售
+            const unpaidSales = appData.sales.filter(sale => 
+                sale.customer === customerName && sale.payment !== '已结清'
+            );
+            
+            if(unpaidSales.length === 0) {
+                container.innerHTML = '<p class="empty-hint">该客户没有未结清账款</p>';
+                return;
+            }
+            
+            // 按日期排序
+            unpaidSales.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let html = '<div style="margin-bottom: 15px;">';
+            let totalDebt = 0;
+            
+            unpaidSales.forEach(sale => {
+                const amount = sale.price * sale.quantity;
+                let debtAmount = 0;
+                
+                if(sale.payment === '未结账') {
+                    debtAmount = amount;
+                } else if(sale.payment === '部分结账') {
+                    debtAmount = amount * 0.5; // 假设部分结账为50%
+                }
+                
+                totalDebt += debtAmount;
+                
+                let badgeClass = sale.payment === '未结账' ? 'badge-danger' : 'badge-warning';
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${sale.product} x${sale.quantity}</div>
+                            <div class="item-detail">${formatDate(sale.date)}</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(debtAmount)}
+                            <span class="badge ${badgeClass}">${sale.payment}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="list-item" style="border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
+                    <div class="item-info">
+                        <div class="item-name">未结清总额</div>
+                    </div>
+                    <div class="item-value" style="font-weight: bold; color: var(--danger-color);">
+                        ${formatCurrency(totalDebt)}
+                    </div>
+                </div>
+            `;
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // 更新客户交易历史
+        function updateCustomerTransactions(customerName, filter) {
+            const container = document.getElementById('customer-transactions');
+            
+            // 筛选该客户的交易
+            let transactions = appData.sales.filter(sale => sale.customer === customerName);
+            
+            if(transactions.length === 0) {
+                container.innerHTML = '<p class="empty-hint">该客户没有交易记录</p>';
+                return;
+            }
+            
+            // 根据筛选条件过滤
+            if(filter !== 'all') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                if(filter === 'month') {
+                    // 本月
+                    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    transactions = transactions.filter(t => new Date(t.date) >= monthStart);
+                } else if(filter === '3month') {
+                    // 近三月
+                    const threeMonthsAgo = new Date(now);
+                    threeMonthsAgo.setMonth(now.getMonth() - 3);
+                    transactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
+                } else if(filter === 'year') {
+                    // 本年
+                    const yearStart = new Date(now.getFullYear(), 0, 1);
+                    transactions = transactions.filter(t => new Date(t.date) >= yearStart);
+                }
+            }
+            
+            if(transactions.length === 0) {
+                container.innerHTML = '<p class="empty-hint">没有符合条件的交易记录</p>';
+                return;
+            }
+            
+            // 按日期倒序排序
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let html = '<div style="margin-bottom: 15px;">';
+            
+            transactions.forEach(sale => {
+                const amount = sale.price * sale.quantity;
+                let badgeClass = 'badge-success';
+                
+                if(sale.payment === '未结账') {
+                    badgeClass = 'badge-danger';
+                } else if(sale.payment === '部分结账') {
+                    badgeClass = 'badge-warning';
+                }
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${sale.product} x${sale.quantity}</div>
+                            <div class="item-detail">${formatDate(sale.date)}</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(amount)}
+                            <span class="badge ${badgeClass}">${sale.payment}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // 更新客户结账记录
+        function updateCustomerPayments(customerName) {
+            const container = document.getElementById('customer-payments');
+            
+            // 筛选该客户的结账记录
+            const payments = appData.payments.filter(payment => payment.customer === customerName);
+            
+            if(payments.length === 0) {
+                container.innerHTML = '<p class="empty-hint">该客户没有结账记录</p>';
+                return;
+            }
+            
+            // 按日期倒序排序
+            payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let html = '<div style="margin-bottom: 15px;">';
+            
+            payments.forEach(payment => {
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${formatDate(payment.date)}</div>
+                            <div class="item-detail">支付方式: ${payment.method}</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(payment.amount)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+// 更新客户列表
+        function updateCustomerList() {
+            const container = document.getElementById('customer-list');
+            const paginationContainer = document.getElementById('customer-pagination');
+            
+            if(appData.customers.length === 0) {
+                container.innerHTML = '<p class="empty-hint">还没有客户，请添加新客户</p>';
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            // 计算客户欠款
+            const customerDebt = calculateCustomerDebt();
+            
+            // 筛选和排序客户列表
+            let filteredCustomers = [...appData.customers];
+            
+            // 应用搜索筛选
+            if(currentState.customerFilter) {
+                filteredCustomers = filteredCustomers.filter(customer => 
+                    customer.name.toLowerCase().includes(currentState.customerFilter) ||
+                    (customer.contact && customer.contact.toLowerCase().includes(currentState.customerFilter)) ||
+                    (customer.phone && customer.phone.includes(currentState.customerFilter))
+                );
+            }
+            
+            // 按欠款金额排序，欠款多的在前面
+            filteredCustomers.sort((a, b) => 
+                (customerDebt[b.name] || 0) - (customerDebt[a.name] || 0)
+            );
+            
+            // 计算分页
+            const totalPages = Math.ceil(filteredCustomers.length / currentState.itemsPerPage);
+            const start = (currentState.customerPage - 1) * currentState.itemsPerPage;
+            const end = start + currentState.itemsPerPage;
+            const pageCustomers = filteredCustomers.slice(start, end);
+            
+            // 生成客户列表HTML
+            let html = '';
+            
+            pageCustomers.forEach(customer => {
+                const debt = customerDebt[customer.name] || 0;
+                const debtHtml = debt > 0 ? 
+                    `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` : 
+                    `<span class="badge badge-success">无欠款</span>`;
+                
+                html += `
+                    <div class="list-item" onclick="showCustomerDetail('${customer.name}')">
+                        <div class="item-info">
+                            <div class="item-name">${customer.name}</div>
+                            <div class="item-detail">联系人: ${customer.contact || '未设置'} ${customer.phone ? `(${formatPhone(customer.phone)})` : ''}</div>
+                        </div>
+                        <div class="item-value">
+                            ${debt > 0 ? formatCurrency(debt) : ''}
+                            ${debtHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // 更新分页控件
+            updatePagination(paginationContainer, totalPages, currentState.customerPage, page => {
+                currentState.customerPage = page;
+                updateCustomerList();
+            });
+        }
+        
+        // 更新库存列表
+        function updateInventoryList() {
+            const container = document.getElementById('full-inventory-list');
+            const paginationContainer = document.getElementById('inventory-pagination');
+            
+            if(appData.inventory.length === 0) {
+                container.innerHTML = '<p class="empty-hint">还没有库存，请先添加商品进货</p>';
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            // 筛选和排序库存列表
+            let filteredInventory = [...appData.inventory];
+            
+            // 应用搜索筛选
+            if(currentState.inventorySearch) {
+                filteredInventory = filteredInventory.filter(item => 
+                    item.product.toLowerCase().includes(currentState.inventorySearch)
+                );
+            }
+            
+            // 应用类型筛选
+            if(currentState.inventoryFilter === 'low') {
+                filteredInventory = filteredInventory.filter(item => 
+                    item.stock <= appData.settings.lowStockThreshold
+                );
+            }
+            
+            // 按库存量排序，少的在前面
+            filteredInventory.sort((a, b) => a.stock - b.stock);
+            
+            // 计算分页
+            const totalPages = Math.ceil(filteredInventory.length / currentState.itemsPerPage);
+            const start = (currentState.inventoryPage - 1) * currentState.itemsPerPage;
+            const end = start + currentState.itemsPerPage;
+            const pageItems = filteredInventory.slice(start, end);
+            
+            // 生成库存列表HTML
+            let html = '';
+            
+            pageItems.forEach(item => {
+                // 计算库存百分比显示进度条
+                const stockPercentage = Math.min(Math.max(item.stock / 20, 0) * 100, 100);
+                
+                let progressClass = 'progress-green';
+                if(item.stock <= appData.settings.lowStockThreshold) {
+                    progressClass = 'progress-orange';
+                } else if(item.stock <= appData.settings.lowStockThreshold * 2) {
+                    progressClass = 'progress-yellow';
+                }
+                
+                // 低库存标记
+                const lowStockLabel = item.stock <= appData.settings.lowStockThreshold ? 
+                    '<span class="low-stock">库存不足</span>' : '';
+                
+                // 计算毛利率
+                const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${item.product} ${lowStockLabel}</div>
+                            <div class="item-detail">成本: ${formatCurrency(item.cost)}/个 · 毛利: ${marginPercent}%</div>
+                            <div class="item-detail">库存: ${item.stock}个</div>
+                            <div class="progress-bar">
+                                <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(item.price)}/个
+                            <div class="action-icons">
+                                <i class="fas fa-edit action-icon edit" onclick="editInventoryItem('${item.product}')" title="编辑商品"></i>
+                                <i class="fas fa-plus action-icon" onclick="quickAddStock('${item.product}')" title="快速补货"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // 更新分页控件
+            updatePagination(paginationContainer, totalPages, currentState.inventoryPage, page => {
+                currentState.inventoryPage = page;
+                updateInventoryList();
+            });
+            
+            // 更新商品选择列表
+            updateProductList();
+        }
+        
+        // 更新交易记录列表
+        function updateTransactionsList() {
+            const container = document.getElementById('full-transactions-list');
+            const paginationContainer = document.getElementById('transaction-pagination');
+            
+            // 合并所有交易记录
+            let allTransactions = [];
+            
+            // 添加销售记录
+            if(currentState.transactionType === 'all' || currentState.transactionType === 'sale') {
+                appData.sales.forEach(sale => {
+                    allTransactions.push({
+                        type: 'sale',
+                        date: sale.date,
+                        timestamp: sale.timestamp,
+                        customer: sale.customer,
+                        product: sale.product,
+                        quantity: sale.quantity,
+                        price: sale.price,
+                        payment: sale.payment,
+                        paymentMethod: sale.paymentMethod,
+                        notes: sale.notes
+                    });
+                });
+            }
+            
+            // 添加进货记录
+            if(currentState.transactionType === 'all' || currentState.transactionType === 'purchase') {
+                appData.purchases.forEach(purchase => {
+                    allTransactions.push({
+                        type: 'purchase',
+                        date: purchase.date,
+                        timestamp: purchase.timestamp,
+                        supplier: purchase.supplier,
+                        product: purchase.product,
+                        quantity: purchase.quantity,
+                        price: purchase.price,
+                        notes: purchase.notes
+                    });
+                });
+            }
+            
+            // 添加结账记录
+            if(currentState.transactionType === 'all' || currentState.transactionType === 'payment') {
+                appData.payments.forEach(payment => {
+                    allTransactions.push({
+                        type: 'payment',
+                        date: payment.date,
+                        timestamp: payment.timestamp,
+                        customer: payment.customer,
+                        amount: payment.amount,
+                        method: payment.method,
+                        notes: payment.notes
+                    });
+                });
+            }
+            
+            if(allTransactions.length === 0) {
+                container.innerHTML = '<p class="empty-hint">还没有交易记录</p>';
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            // 应用时间筛选
+            if(currentState.timeFilter !== 'all') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                if(currentState.timeFilter === 'today') {
+                    // 今天
+                    const todayStr = formatDate(today);
+                    allTransactions = allTransactions.filter(t => t.date === todayStr);
+                } else if(currentState.timeFilter === 'week') {
+                    // 本周
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay()); // 本周日
+                    allTransactions = allTransactions.filter(t => new Date(t.date) >= weekStart);
+                } else if(currentState.timeFilter === 'month') {
+                    // 本月
+                    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    allTransactions = allTransactions.filter(t => new Date(t.date) >= monthStart);
+                }
+            }
+            
+            // 应用搜索筛选
+            if(currentState.transactionSearch) {
+                allTransactions = allTransactions.filter(t => {
+                    const searchLower = currentState.transactionSearch.toLowerCase();
+                    
+                    if(t.type === 'sale' || t.type === 'payment') {
+                        // 客户名称
+                        if(t.customer && t.customer.toLowerCase().includes(searchLower)) {
+                            return true;
+                        }
+                    }
+                    
+                    if(t.type === 'purchase') {
+                        // 供应商名称
+                        if(t.supplier && t.supplier.toLowerCase().includes(searchLower)) {
+                            return true;
+                        }
+                    }
+                    
+                    if(t.type === 'sale' || t.type === 'purchase') {
+                        // 商品名称
+                        if(t.product && t.product.toLowerCase().includes(searchLower)) {
+                            return true;
+                        }
+                    }
+                    
+                    // 备注
+                    if(t.notes && t.notes.toLowerCase().includes(searchLower)) {
+                        return true;
+                    }
+                    
+                    return false;
+                });
+            }
+            
+            // 按日期和时间戳排序，最新的在前面
+            allTransactions.sort((a, b) => {
+                const dateCompare = new Date(b.date) - new Date(a.date);
+                return dateCompare !== 0 ? dateCompare : b.timestamp - a.timestamp;
+            });
+            
+            // 计算分页
+            const totalPages = Math.ceil(allTransactions.length / currentState.itemsPerPage);
+            const start = (currentState.transactionPage - 1) * currentState.itemsPerPage;
+            const end = start + currentState.itemsPerPage;
+            const pageItems = allTransactions.slice(start, end);
+            
+            // 生成交易记录列表HTML
+            let html = '';
+            
+            pageItems.forEach(transaction => {
+                if(transaction.type === 'sale') {
+                    // 销售记录
+                    const amount = transaction.price * transaction.quantity;
+                    
+                    let badgeClass = 'badge-success';
+                    if(transaction.payment === '未结账') {
+                        badgeClass = 'badge-danger';
+                    } else if(transaction.payment === '部分结账') {
+                        badgeClass = 'badge-warning';
+                    }
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="item-info">
+                                <div class="item-name">销售: ${transaction.product} x${transaction.quantity}</div>
+                                <div class="item-detail">
+                                    客户: ${transaction.customer} · ${formatDate(transaction.date)}
+                                    ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
+                                </div>
+                            </div>
+                            <div class="item-value">
+                                ${formatCurrency(amount)}
+                                <span class="badge ${badgeClass}">${transaction.payment}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if(transaction.type === 'purchase') {
+                    // 进货记录
+                    const amount = transaction.price * transaction.quantity;
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="item-info">
+                                <div class="item-name">进货: ${transaction.product} x${transaction.quantity}</div>
+                                <div class="item-detail">
+                                    供应商: ${transaction.supplier || '未指定'} · ${formatDate(transaction.date)}
+                                    ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
+                                </div>
+                            </div>
+                            <div class="item-value">
+                                ${formatCurrency(amount)}
+                                <span class="badge badge-info">进货</span>
+                            </div>
+                        </div>
+                    `;
+                } else if(transaction.type === 'payment') {
+                    // 结账记录
+                    html += `
+                        <div class="list-item">
+                            <div class="item-info">
+                                <div class="item-name">客户结账: ${transaction.customer}</div>
+                                <div class="item-detail">
+                                    方式: ${transaction.method} · ${formatDate(transaction.date)}
+                                    ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
+                                </div>
+                            </div>
+                            <div class="item-value">
+                                ${formatCurrency(transaction.amount)}
+                                <span class="badge badge-success">结账</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+            
+            // 更新分页控件
+            updatePagination(paginationContainer, totalPages, currentState.transactionPage, page => {
+                currentState.transactionPage = page;
+                updateTransactionsList();
+            });
+        }
+// 更新商品下拉列表
+        function updateProductList() {
+            // 更新datalist选项
+            const productDatalist = document.getElementById('product-list');
+            productDatalist.innerHTML = '';
+            
+            // 更新销售表单select选项
+            const saleProductSelect = document.getElementById('sale-product');
+            
+            // 保存当前选中的值
+            const currentValue = saleProductSelect.value;
+            
+            // 清空选项，仅保留空选项
+            saleProductSelect.innerHTML = '<option value="">选择商品</option>';
+            
+            // 添加库存中的商品
+            appData.inventory.forEach(item => {
+                // 添加到datalist
+                const option = document.createElement('option');
+                option.value = item.product;
+                productDatalist.appendChild(option);
+                
+                // 添加到select，并标注库存
+                const selectOption = document.createElement('option');
+                selectOption.value = item.product;
+                selectOption.textContent = `${item.product} (库存: ${item.stock})`;
+                
+                // 如果库存低，添加警告
+                if(item.stock <= appData.settings.lowStockThreshold) {
+                    selectOption.textContent += ' ⚠️';
+                }
+                
+                saleProductSelect.appendChild(selectOption);
+            });
+            
+            // 恢复选中值
+            if(currentValue) {
+                saleProductSelect.value = currentValue;
+            }
+            
+            // 更新进货表单的供应商列表
+            const supplierDatalist = document.getElementById('supplier-list');
+            supplierDatalist.innerHTML = '';
+            
+            appData.suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier;
+                supplierDatalist.appendChild(option);
+            });
+            
+            // 更新客户列表
+            const customerDatalist = document.getElementById('customer-list');
+            customerDatalist.innerHTML = '';
+            
+            appData.customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.name;
+                customerDatalist.appendChild(option);
+            });
+        }
+        
+        // 更新结账页面的客户下拉列表
+        function updatePaymentCustomerList() {
+            const customerSelect = document.getElementById('payment-customer');
+            
+            // 保存当前选中的值
+            const currentValue = customerSelect.value;
+            
+            // 清空选项
+            customerSelect.innerHTML = '';
+            
+            // 计算客户欠款
+            const customerDebt = calculateCustomerDebt();
+            
+            // 添加有欠款的客户
+            let hasDebtCustomers = false;
+            
+            appData.customers.forEach(customer => {
+                const debt = customerDebt[customer.name] || 0;
+                if(debt > 0) {
+                    hasDebtCustomers = true;
+                    const option = document.createElement('option');
+                    option.value = customer.name;
+                    option.textContent = `${customer.name} (欠款: ${formatCurrency(debt)})`;
+                    customerSelect.appendChild(option);
+                }
+            });
+            
+            if(!hasDebtCustomers) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '没有欠款客户';
+                option.disabled = true;
+                customerSelect.appendChild(option);
+            }
+            
+            // 恢复选中值
+            if(currentValue && customerSelect.querySelector(`option[value="${currentValue}"]`)) {
+                customerSelect.value = currentValue;
+            }
+            
+            // 更新所选客户的欠款信息
+            updateSelectedCustomerDebt();
+        }
+        
+        // 更新选中客户的欠款信息
+        function updateSelectedCustomerDebt() {
+            const customerSelect = document.getElementById('payment-customer');
+            const debtInput = document.getElementById('payment-debt');
+            
+            if(customerSelect.options.length === 0) {
+                debtInput.value = '';
+                return;
+            }
+            
+            const selectedCustomer = customerSelect.value;
+            const customerDebt = calculateCustomerDebt();
+            const debt = customerDebt[selectedCustomer] || 0;
+            
+            debtInput.value = formatCurrency(debt);
+            
+            // 更新未结清账单列表
+            updateUnpaidBillsList(selectedCustomer);
+        }
+        
+        // 更新未结清账单列表
+        function updateUnpaidBillsList(customerName) {
+            const container = document.getElementById('unpaid-bills-list');
+            
+            if(!customerName) {
+                container.innerHTML = '<p class="empty-hint">请先选择客户</p>';
+                return;
+            }
+            
+            // 筛选该客户的未结清销售
+            const unpaidSales = appData.sales.filter(sale => 
+                sale.customer === customerName && sale.payment !== '已结清'
+            );
+            
+            if(unpaidSales.length === 0) {
+                container.innerHTML = '<p class="empty-hint">该客户没有未结清账单</p>';
+                return;
+            }
+            
+            // 按日期排序，最早的在前面
+            unpaidSales.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let html = '';
+            
+            unpaidSales.forEach(sale => {
+                const amount = sale.price * sale.quantity;
+                let debtAmount = 0;
+                
+                if(sale.payment === '未结账') {
+                    debtAmount = amount;
+                } else if(sale.payment === '部分结账') {
+                    debtAmount = amount * 0.5; // 假设部分结账为50%
+                }
+                
+                let badgeClass = sale.payment === '未结账' ? 'badge-danger' : 'badge-warning';
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${sale.product} x${sale.quantity}</div>
+                            <div class="item-detail">${formatDate(sale.date)}</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(debtAmount)}
+                            <span class="badge ${badgeClass}">${sale.payment}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 处理客户结账
+        function processPayment() {
+            const customerSelect = document.getElementById('payment-customer');
+            const selectedCustomer = customerSelect.value;
+            const amountInput = document.getElementById('payment-amount');
+            const amount = parseFloat(amountInput.value);
+            const method = document.getElementById('payment-method').value;
+            const date = document.getElementById('payment-date').value;
+            const notes = document.getElementById('payment-notes').value.trim();
+            
+            // 验证数据
+            if(!selectedCustomer) {
+                toast.error('请选择客户!');
+                return;
+            }
+            
+            if(isNaN(amount) || amount <= 0) {
+                toast.error('请输入有效的结账金额!');
+                return;
+            }
+            
+            // 计算客户欠款
+            const customerDebt = calculateCustomerDebt();
+            const debt = customerDebt[selectedCustomer] || 0;
+            
+            if(debt <= 0) {
+                toast.error('该客户没有欠款!');
+                return;
+            }
+            
+            if(amount > debt) {
+                toast.warning('结账金额大于欠款总额，将按欠款总额结算');
+            }
+            
+            // 创建结账记录
+            const payment = {
+                customer: selectedCustomer,
+                amount: Math.min(amount, debt),
+                method,
+                date,
+                notes,
+                timestamp: Date.now()
+            };
+            
+            // 添加到结账记录
+            appData.payments.push(payment);
+            
+            // 更新销售记录的支付状态
+            const actualAmount = Math.min(amount, debt);
+            let remainingAmount = actualAmount;
+            
+            // 筛选该客户的未结清销售，并按日期排序（先结算最早的）
+            const unpaidSales = appData.sales.filter(sale => 
+                sale.customer === selectedCustomer && sale.payment !== '已结清'
+            ).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
+                const sale = unpaidSales[i];
+                const saleAmount = sale.price * sale.quantity;
+                let debtAmount = 0;
+                
+                if(sale.payment === '未结账') {
+                    debtAmount = saleAmount;
+                } else if(sale.payment === '部分结账') {
+                    debtAmount = saleAmount * 0.5; // 假设部分结账为50%
+                }
+                
+                const saleIndex = appData.sales.findIndex(s => 
+                    s.customer === sale.customer && 
+                    s.product === sale.product && 
+                    s.date === sale.date && 
+                    s.timestamp === sale.timestamp
+                );
+                
+                if(saleIndex !== -1) {
+                    if(remainingAmount >= debtAmount) {
+                        // 完全结清这笔销售
+                        appData.sales[saleIndex].payment = '已结清';
+                        appData.sales[saleIndex].paymentMethod = method;
+                        remainingAmount -= debtAmount;
+                    } else {
+                        // 部分结清这笔销售
+                        if(sale.payment === '未结账') {
+                            appData.sales[saleIndex].payment = '部分结账';
+                        }
+                        remainingAmount = 0;
+                    }
+                }
+            }
+            
+            // 保存数据
+            saveAppData();
+            
+            // 显示成功消息
+            toast.success('结账处理成功!');
+            
+            // 重置表单
+            document.getElementById('new-payment').reset();
+            document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+            
+            // 更新界面
+            updatePaymentCustomerList();
+            updateDashboard();
+            
+            // 返回主页
+            showScreen('home-screen');
+        }
+        
         // 计算客户欠款总额
         function calculateCustomerDebt() {
-            const data = JSON.parse(localStorage.getItem('poultryData'));
             const customerDebt = {};
             
             // 初始化客户欠款为0
-            data.customers.forEach(customer => {
+            appData.customers.forEach(customer => {
                 customerDebt[customer.name] = 0;
             });
             
-            // 统计所有未结清的销售
-            data.sales.forEach(sale => {
+            // 累加未结清销售金额
+            appData.sales.forEach(sale => {
                 if(sale.payment !== '已结清') {
-                    const amount = sale.quantity * sale.price;
+                    const amount = sale.price * sale.quantity;
+                    
                     if(sale.payment === '未结账') {
                         customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + amount;
                     } else if(sale.payment === '部分结账') {
-                        customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + amount * 0.5; // 简化处理，假设部分结账为50%
+                        customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + amount * 0.5; // 假设部分结账为50%
                     }
                 }
             });
@@ -1181,71 +3018,1314 @@
             return customerDebt;
         }
         
-        // 更新选中客户的欠款信息
-        function updateSelectedCustomerDebt() {
-            const paymentCustomer = document.getElementById('payment-customer');
-            if(!paymentCustomer || paymentCustomer.options.length === 0) return;
+        // 生成分页控件
+        function updatePagination(container, totalPages, currentPage, callback) {
+            if(totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
             
-            const selectedCustomer = paymentCustomer.value;
+            let html = '';
+            
+            // 上一页按钮
+            const prevDisabled = currentPage === 1;
+            html += `<button class="pagination-btn ${prevDisabled ? 'disabled' : ''}" 
+                ${prevDisabled ? 'disabled' : `onclick="handlePageChange(${currentPage - 1}, ${callback.name})"`}>
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+            
+            // 页码按钮
+            const maxButtons = 5;
+            const halfMaxButtons = Math.floor(maxButtons / 2);
+            
+            let startPage = Math.max(1, currentPage - halfMaxButtons);
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            
+            if(endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+            
+            for(let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                    onclick="handlePageChange(${i}, ${callback.name})">${i}</button>`;
+            }
+            
+            // 下一页按钮
+            const nextDisabled = currentPage === totalPages;
+            html += `<button class="pagination-btn ${nextDisabled ? 'disabled' : ''}" 
+                ${nextDisabled ? 'disabled' : `onclick="handlePageChange(${currentPage + 1}, ${callback.name})"`}>
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+            
+            container.innerHTML = html;
+        }
+        
+        // 分页按钮点击处理
+        function handlePageChange(page, callbackName) {
+            if(callbackName === 'updateCustomerList') {
+                currentState.customerPage = page;
+                updateCustomerList();
+            } else if(callbackName === 'updateInventoryList') {
+                currentState.inventoryPage = page;
+                updateInventoryList();
+            } else if(callbackName === 'updateTransactionsList') {
+                currentState.transactionPage = page;
+                updateTransactionsList();
+            }
+        }
+        
+        // 编辑库存商品
+        function editInventoryItem(productName) {
+            const item = appData.inventory.find(item => item.product === productName);
+            if(!item) {
+                toast.error('找不到商品!');
+                return;
+            }
+            
+            // 使用对话框让用户编辑商品信息
+            const html = `
+                <div class="form-group">
+                    <label class="form-label">商品名称</label>
+                    <input type="text" class="form-control" id="edit-product-name" value="${item.product}" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">当前库存</label>
+                    <input type="number" class="form-control" id="edit-product-stock" value="${item.stock}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">成本价(元)</label>
+                    <input type="number" step="0.1" class="form-control" id="edit-product-cost" value="${item.cost}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">销售价(元)</label>
+                    <input type="number" step="0.1" class="form-control" id="edit-product-price" value="${item.price}">
+                </div>
+            `;
+            
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.style.display = 'flex';
+            
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-title">编辑商品</div>
+                    <div class="modal-content">${html}</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" id="edit-cancel">取消</button>
+                        <button class="btn btn-primary btn-sm" id="edit-save">保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到文档
+            document.body.appendChild(modal);
+            
+            // 绑定按钮事件
+            document.getElementById('edit-cancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('edit-save').addEventListener('click', () => {
+                const newStock = parseInt(document.getElementById('edit-product-stock').value);
+                const newCost = parseFloat(document.getElementById('edit-product-cost').value);
+                const newPrice = parseFloat(document.getElementById('edit-product-price').value);
+                
+                // 验证输入
+                if(isNaN(newStock) || newStock < 0 || isNaN(newCost) || newCost <= 0 || isNaN(newPrice) || newPrice <= 0) {
+                    toast.error('请输入有效的数值!');
+                    return;
+                }
+                
+                // 更新商品信息
+                item.stock = newStock;
+                item.cost = newCost;
+                item.price = newPrice;
+                
+                // 保存数据
+                saveAppData();
+                
+                // 更新界面
+                updateInventoryList();
+                
+                // 显示成功消息
+                toast.success('商品信息更新成功!');
+                
+                // 关闭模态框
+                document.body.removeChild(modal);
+            });
+        }
+        
+        // 快速补货
+        function quickAddStock(productName) {
+            const item = appData.inventory.find(item => item.product === productName);
+            if(!item) {
+                toast.error('找不到商品!');
+                return;
+            }
+            
+            // 使用对话框让用户输入补货数量和成本
+            const html = `
+                <div class="form-group">
+                    <label class="form-label">商品名称</label>
+                    <input type="text" class="form-control" value="${item.product}" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">当前库存</label>
+                    <input type="text" class="form-control" value="${item.stock}" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">补货数量</label>
+                    <input type="number" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">进货单价(元)</label>
+                    <input type="number" step="0.1" class="form-control" id="add-stock-cost" value="${item.cost}" placeholder="输入进货单价">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">供应商</label>
+                    <input type="text" class="form-control" id="add-stock-supplier" list="supplier-list" placeholder="输入供应商名称">
+                </div>
+            `;
+            
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.style.display = 'flex';
+            
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-title">快速补货</div>
+                    <div class="modal-content">${html}</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" id="add-stock-cancel">取消</button>
+                        <button class="btn btn-primary btn-sm" id="add-stock-save">确认补货</button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到文档
+            document.body.appendChild(modal);
+            
+            // 绑定按钮事件
+            document.getElementById('add-stock-cancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('add-stock-save').addEventListener('click', () => {
+                const quantity = parseInt(document.getElementById('add-stock-quantity').value);
+                const cost = parseFloat(document.getElementById('add-stock-cost').value);
+                const supplier = document.getElementById('add-stock-supplier').value.trim();
+                
+                // 验证输入
+                if(isNaN(quantity) || quantity <= 0 || isNaN(cost) || cost <= 0) {
+                    toast.error('请输入有效的数量和单价!');
+                    return;
+                }
+                
+                // 创建进货记录
+                const purchase = {
+                    product: item.product,
+                    quantity: quantity,
+                    price: cost,
+                    supplier: supplier,
+                    date: new Date().toISOString().split('T')[0],
+                    notes: `快速补货`,
+                    timestamp: Date.now()
+                };
+                
+                // 保存供应商
+                if(supplier && !appData.suppliers.includes(supplier)) {
+                    appData.suppliers.push(supplier);
+                }
+                
+                // 更新库存
+                const oldStock = item.stock;
+                const oldCost = item.cost;
+                const newStock = oldStock + quantity;
+                
+                // 计算加权平均成本
+                const totalCost = oldStock * oldCost + quantity * cost;
+                const weightedCost = totalCost / newStock;
+                
+                item.stock = newStock;
+                item.cost = Math.round(weightedCost * 10) / 10;
+                
+                // 添加到进货记录
+                appData.purchases.push(purchase);
+                
+                // 保存数据
+                saveAppData();
+                
+                // 更新界面
+                updateInventoryList();
+                
+                // 显示成功消息
+                toast.success('补货成功!');
+                
+                // 关闭模态框
+                document.body.removeChild(modal);
+            });
+        }
+        
+        // 编辑客户
+        function editCustomer() {
+            const customerName = currentState.currentCustomer;
+            if(!customerName) return;
+            
+            const customer = appData.customers.find(c => c.name === customerName);
+            if(!customer) {
+                toast.error('找不到客户信息!');
+                return;
+            }
+            
+            // 使用对话框让用户编辑客户信息
+            const html = `
+                <div class="form-group">
+                    <label class="form-label">客户名称</label>
+                    <input type="text" class="form-control" id="edit-customer-name" value="${customer.name}" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系人</label>
+                    <input type="text" class="form-control" id="edit-customer-contact" value="${customer.contact || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="tel" class="form-control" id="edit-customer-phone" value="${customer.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">地址</label>
+                    <textarea class="form-control" id="edit-customer-address">${customer.address || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-control" id="edit-customer-notes">${customer.notes || ''}</textarea>
+                </div>
+            `;
+            
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.style.display = 'flex';
+            
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-title">编辑客户</div>
+                    <div class="modal-content">${html}</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" id="edit-customer-cancel">取消</button>
+                        <button class="btn btn-primary btn-sm" id="edit-customer-save">保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到文档
+            document.body.appendChild(modal);
+            
+            // 绑定按钮事件
+            document.getElementById('edit-customer-cancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('edit-customer-save').addEventListener('click', () => {
+                const contact = document.getElementById('edit-customer-contact').value.trim();
+                const phone = document.getElementById('edit-customer-phone').value.trim();
+                const address = document.getElementById('edit-customer-address').value.trim();
+                const notes = document.getElementById('edit-customer-notes').value.trim();
+                
+                // 更新客户信息
+                customer.contact = contact;
+                customer.phone = phone;
+                customer.address = address;
+                customer.notes = notes;
+                
+                // 保存数据
+                saveAppData();
+                
+                // 更新界面
+                showCustomerDetail(customerName);
+                
+                // 显示成功消息
+                toast.success('客户信息更新成功!');
+                
+                // 关闭模态框
+                document.body.removeChild(modal);
+            });
+        }
+        
+        // 删除客户
+        function deleteCustomer() {
+            const customerName = currentState.currentCustomer;
+            if(!customerName) return;
+            
+            // 检查客户是否有未结清交易
+            const hasUnpaidSales = appData.sales.some(sale => 
+                sale.customer === customerName && sale.payment !== '已结清'
+            );
+            
+            if(hasUnpaidSales) {
+                toast.error('该客户有未结清账款，不能删除!');
+                return;
+            }
+            
+            // 使用确认对话框
+            confirmDialog.show(`确定要删除客户"${customerName}"吗？此操作不可恢复!`, (confirmed) => {
+                if(confirmed) {
+                    // 找到客户索引
+                    const index = appData.customers.findIndex(c => c.name === customerName);
+                    if(index !== -1) {
+                        // 删除客户
+                        appData.customers.splice(index, 1);
+                        
+                        // 保存数据
+                        saveAppData();
+                        
+                        // 显示成功消息
+                        toast.success('客户已删除!');
+                        
+                        // 返回客户列表
+                        showScreen('customer-form');
+                    }
+                }
+            });
+        }
+        
+        // 保存设置
+        function saveSettings() {
+            appData.settings.lowStockAlert = document.getElementById('setting-low-stock').checked;
+            appData.settings.lowStockThreshold = parseInt(document.getElementById('setting-low-stock-threshold').value) || 10;
+            appData.settings.debtReminder = document.getElementById('setting-debt-reminder').checked;
+            appData.settings.debtReminderDays = parseInt(document.getElementById('setting-debt-days').value) || 7;
+            
+            // 保存数据
+            saveAppData();
+            
+            // 显示成功消息
+            toast.success('设置已保存!');
+            
+            // 更新界面
+            updateDashboard();
+        }
+// 初始化销售趋势图表
+        function initSalesChart() {
+            const canvas = document.getElementById('sales-chart');
+            const context = canvas.getContext('2d');
+            
+            // 如果图表已存在，销毁它
+            if(currentState.salesChartInstance) {
+                currentState.salesChartInstance.destroy();
+            }
+            
+            // 创建图表实例
+            currentState.salesChartInstance = new Chart(context, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '销售额',
+                            data: [],
+                            borderColor: '#4a86e8',
+                            backgroundColor: 'rgba(74, 134, 232, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: '利润',
+                            data: [],
+                            borderColor: '#34a853',
+                            backgroundColor: 'rgba(52, 168, 83, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value;
+                                }
+                            }
+                        }
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return data.datasets[tooltipItem.datasetIndex].label + ': ¥' + tooltipItem.yLabel.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 更新图表数据
+            updateSalesTrend();
+        }
+        
+        // 初始化报表图表
+        function initReportChart() {
+            const canvas = document.getElementById('report-chart');
+            
+            // 如果图表已存在，销毁它
+            if(currentState.reportChartInstance) {
+                currentState.reportChartInstance.destroy();
+            }
+            
+            // 默认显示销售额图表
+            updateReportChart('sales', 'month');
+        }
+        
+        // 更新报表图表
+        function updateReportChart(chartType, period = 'month') {
+            const canvas = document.getElementById('report-chart');
+            const summaryContainer = document.getElementById('chart-summary');
+            
+            if(!canvas) return;
+            
+            // 如果图表已存在，销毁它
+            if(currentState.reportChartInstance) {
+                currentState.reportChartInstance.destroy();
+            }
+            
+            // 准备图表数据
+            const chartData = prepareChartData(chartType, period);
+            
+            // 根据图表类型设置图表选项
+            let chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if(label) {
+                                    label += ': ';
+                                }
+                                if(context.parsed.y !== null) {
+                                    if(chartType === 'sales' || chartType === 'profit') {
+                                        label += '¥' + context.parsed.y.toFixed(2);
+                                    } else {
+                                        label += context.parsed.y;
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // 仅在销售额和利润图表中显示货币符号
+            if(chartType === 'sales' || chartType === 'profit') {
+                chartOptions.scales = {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '¥' + value;
+                            }
+                        }
+                    }
+                };
+            }
+            
+            // 创建图表
+            currentState.reportChartInstance = new Chart(canvas, {
+                type: chartData.type,
+                data: chartData.data,
+                options: chartOptions
+            });
+            
+            // 更新汇总信息
+            summaryContainer.innerHTML = chartData.summary;
+        }
+        
+        // 准备图表数据
+        function prepareChartData(chartType, period) {
+            let chartData = {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                summary: ''
+            };
+            
+            // 获取日期范围
+            const now = new Date();
+            let startDate, endDate, dateFormat;
+            
+            if(period === 'week') {
+                // 本周数据：显示最近7天
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 6);
+                endDate = now;
+                dateFormat = 'day'; // 按天显示
+            } else if(period === 'month') {
+                // 本月数据：显示本月每天
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                dateFormat = 'day'; // 按天显示
+            } else if(period === 'quarter') {
+                // 本季度：显示近三个月
+                startDate = new Date(now);
+                startDate.setMonth(now.getMonth() - 2);
+                startDate.setDate(1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                dateFormat = 'month'; // 按月显示
+            } else if(period === 'year') {
+                // 本年：显示本年每个月
+                startDate = new Date(now.getFullYear(), 0, 1);
+                endDate = new Date(now.getFullYear(), 11, 31);
+                dateFormat = 'month'; // 按月显示
+            }
+            
+            // 按图表类型生成数据
+            if(chartType === 'sales') {
+                // 销售额图表
+                return prepareSalesChart(startDate, endDate, dateFormat);
+            } else if(chartType === 'profit') {
+                // 利润图表
+                return prepareProfitChart(startDate, endDate, dateFormat);
+            } else if(chartType === 'product') {
+                // 商品销量图表
+                return prepareProductChart(startDate, endDate);
+            } else if(chartType === 'customer') {
+                // 客户销售额图表
+                return prepareCustomerChart(startDate, endDate);
+            }
+            
+            return chartData;
+        }
+        
+        // 准备销售额图表数据
+        function prepareSalesChart(startDate, endDate, dateFormat) {
+            let labels = [];
+            let salesData = [];
+            
+            // 生成日期标签
+            const current = new Date(startDate);
+            while(current <= endDate) {
+                if(dateFormat === 'day') {
+                    labels.push(formatDate(current).slice(5)); // 只显示月-日
+                    salesData.push(0);
+                } else if(dateFormat === 'month') {
+                    const monthName = current.toLocaleString('zh-CN', { month: 'short' });
+                    labels.push(monthName);
+                    salesData.push(0);
+                }
+                
+                if(dateFormat === 'day') {
+                    current.setDate(current.getDate() + 1);
+                } else if(dateFormat === 'month') {
+                    current.setMonth(current.getMonth() + 1);
+                }
+            }
+            
+            // 计算每个日期的销售额
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    const amount = sale.price * sale.quantity;
+                    
+                    let index = -1;
+                    if(dateFormat === 'day') {
+                        const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
+                        index = labels.indexOf(dateStr);
+                    } else if(dateFormat === 'month') {
+                        const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
+                        index = labels.indexOf(monthName);
+                    }
+                    
+                    if(index !== -1) {
+                        salesData[index] += amount;
+                    }
+                }
+            });
+            
+            // 计算汇总信息
+            const totalSales = salesData.reduce((sum, amount) => sum + amount, 0);
+            const avgSales = totalSales / salesData.filter(amount => amount > 0).length;
+            
+            // 找出最高销售额日期
+            let maxSaleIndex = 0;
+            for(let i = 1; i < salesData.length; i++) {
+                if(salesData[i] > salesData[maxSaleIndex]) {
+                    maxSaleIndex = i;
+                }
+            }
+            
+            // 生成汇总HTML
+            const summary = `
+                <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                    <p><strong>总销售额:</strong> ${formatCurrency(totalSales)}</p>
+                    <p><strong>平均销售额:</strong> ${formatCurrency(avgSales)}</p>
+                    <p><strong>最高销售额:</strong> ${formatCurrency(salesData[maxSaleIndex])} (${labels[maxSaleIndex]})</p>
+                </div>
+            `;
+            
+            return {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '销售额',
+                            data: salesData,
+                            borderColor: '#4a86e8',
+                            backgroundColor: 'rgba(74, 134, 232, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                summary: summary
+            };
+        }
+        
+        // 准备利润图表数据
+        function prepareProfitChart(startDate, endDate, dateFormat) {
+            let labels = [];
+            let profitData = [];
+            
+            // 生成日期标签
+            const current = new Date(startDate);
+            while(current <= endDate) {
+                if(dateFormat === 'day') {
+                    labels.push(formatDate(current).slice(5)); // 只显示月-日
+                    profitData.push(0);
+                } else if(dateFormat === 'month') {
+                    const monthName = current.toLocaleString('zh-CN', { month: 'short' });
+                    labels.push(monthName);
+                    profitData.push(0);
+                }
+                
+                if(dateFormat === 'day') {
+                    current.setDate(current.getDate() + 1);
+                } else if(dateFormat === 'month') {
+                    current.setMonth(current.getMonth() + 1);
+                }
+            }
+            
+            // 计算每个日期的利润
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    // 找到商品成本
+                    const inventoryItem = appData.inventory.find(item => item.product === sale.product);
+                    if(inventoryItem) {
+                        const saleAmount = sale.price * sale.quantity;
+                        const costAmount = inventoryItem.cost * sale.quantity;
+                        const profit = saleAmount - costAmount;
+                        
+                        let index = -1;
+                        if(dateFormat === 'day') {
+                            const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
+                            index = labels.indexOf(dateStr);
+                        } else if(dateFormat === 'month') {
+                            const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
+                            index = labels.indexOf(monthName);
+                        }
+                        
+                        if(index !== -1) {
+                            profitData[index] += profit;
+                        }
+                    }
+                }
+            });
+            
+            // 计算汇总信息
+            const totalProfit = profitData.reduce((sum, amount) => sum + amount, 0);
+            const avgProfit = totalProfit / profitData.filter(amount => amount > 0).length;
+            
+            // 找出最高利润日期
+            let maxProfitIndex = 0;
+            for(let i = 1; i < profitData.length; i++) {
+                if(profitData[i] > profitData[maxProfitIndex]) {
+                    maxProfitIndex = i;
+                }
+            }
+            
+            // 生成汇总HTML
+            const summary = `
+                <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                    <p><strong>总利润:</strong> ${formatCurrency(totalProfit)}</p>
+                    <p><strong>平均利润:</strong> ${formatCurrency(avgProfit)}</p>
+                    <p><strong>最高利润:</strong> ${formatCurrency(profitData[maxProfitIndex])} (${labels[maxProfitIndex]})</p>
+                </div>
+            `;
+            
+            return {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '利润',
+                            data: profitData,
+                            borderColor: '#34a853',
+                            backgroundColor: 'rgba(52, 168, 83, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                summary: summary
+            };
+        }
+        
+        // 准备商品销量图表数据
+        function prepareProductChart(startDate, endDate) {
+            // 收集时间范围内的所有商品销量
+            const productSales = {};
+            
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    if(!productSales[sale.product]) {
+                        productSales[sale.product] = 0;
+                    }
+                    productSales[sale.product] += sale.quantity;
+                }
+            });
+            
+            // 转换为数组并排序，取前10个
+            const sortedProducts = Object.entries(productSales)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            const labels = sortedProducts.map(product => product[0]);
+            const data = sortedProducts.map(product => product[1]);
+            
+            // 生成汇总HTML
+            let summaryHtml = '<div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">';
+            
+            if(sortedProducts.length > 0) {
+                summaryHtml += `<p><strong>最畅销商品:</strong> ${sortedProducts[0][0]} (${sortedProducts[0][1]}个)</p>`;
+                
+                // 计算总销量
+                const totalSales = sortedProducts.reduce((sum, product) => sum + product[1], 0);
+                summaryHtml += `<p><strong>总销量:</strong> ${totalSales}个</p>`;
+                
+                // 计算平均每笔销量
+                const avgSales = totalSales / appData.sales.filter(sale => 
+                    new Date(sale.date) >= startDate && new Date(sale.date) <= endDate
+                ).length;
+                summaryHtml += `<p><strong>平均每笔销量:</strong> ${avgSales.toFixed(1)}个</p>`;
+            } else {
+                summaryHtml += '<p>该时间段内没有销售记录</p>';
+            }
+            
+            summaryHtml += '</div>';
+            
+            return {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '销量',
+                            data: data,
+                            backgroundColor: 'rgba(66, 133, 244, 0.6)',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                summary: summaryHtml
+            };
+        }
+        
+        // 准备客户销售额图表数据
+        function prepareCustomerChart(startDate, endDate) {
+            // 收集时间范围内的所有客户销售额
+            const customerSales = {};
+            
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    if(!customerSales[sale.customer]) {
+                        customerSales[sale.customer] = 0;
+                    }
+                    customerSales[sale.customer] += sale.price * sale.quantity;
+                }
+            });
+            
+            // 转换为数组并排序，取前10个
+            const sortedCustomers = Object.entries(customerSales)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            const labels = sortedCustomers.map(customer => customer[0]);
+            const data = sortedCustomers.map(customer => customer[1]);
+            
+            // 生成汇总HTML
+            let summaryHtml = '<div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">';
+            
+            if(sortedCustomers.length > 0) {
+                summaryHtml += `<p><strong>最大客户:</strong> ${sortedCustomers[0][0]} (${formatCurrency(sortedCustomers[0][1])})</p>`;
+                
+                // 计算总销售额
+                const totalSales = sortedCustomers.reduce((sum, customer) => sum + customer[1], 0);
+                summaryHtml += `<p><strong>总销售额:</strong> ${formatCurrency(totalSales)}</p>`;
+                
+                // 计算平均每客户销售额
+                const avgSales = totalSales / sortedCustomers.length;
+                summaryHtml += `<p><strong>平均每客户销售额:</strong> ${formatCurrency(avgSales)}</p>`;
+            } else {
+                summaryHtml += '<p>该时间段内没有销售记录</p>';
+            }
+            
+            summaryHtml += '</div>';
+            
+            return {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '销售额',
+                            data: data,
+                            backgroundColor: 'rgba(52, 168, 83, 0.6)',
+                            borderColor: 'rgba(52, 168, 83, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                summary: summaryHtml
+            };
+        }
+        
+        // 更新排行榜列表
+        function updateRankList(rankType) {
+            const container = document.getElementById('rank-list');
+            
+            if(!container) return;
+            
+            // 清空容器
+            container.innerHTML = '';
+            
+            if(rankType === 'product') {
+                // 商品销量排行
+                updateProductRankList(container);
+            } else if(rankType === 'customer') {
+                // 客户销售额排行
+                updateCustomerRankList(container);
+            }
+        }
+        
+        // 更新商品销量排行
+        function updateProductRankList(container) {
+            // 获取本月时间范围
+            const now = new Date();
+            const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            // 收集时间范围内的所有商品销量
+            const productSales = {};
+            
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    if(!productSales[sale.product]) {
+                        productSales[sale.product] = 0;
+                    }
+                    productSales[sale.product] += sale.quantity;
+                }
+            });
+            
+            // 转换为数组并排序
+            const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
+            
+            if(sortedProducts.length === 0) {
+                container.innerHTML = '<p class="empty-hint">本月还没有销售记录</p>';
+                return;
+            }
+            
+            // 生成排行榜HTML
+            let html = '<div style="margin-top: 10px;">';
+            
+            // 计算总销量用于计算占比
+            const totalSales = sortedProducts.reduce((sum, product) => sum + product[1], 0);
+            
+            sortedProducts.forEach((product, index) => {
+                const [name, quantity] = product;
+                const percentage = Math.round(quantity / totalSales * 100);
+                
+                // 根据排名显示不同的奖杯图标
+                let rankIcon = '';
+                if(index === 0) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: gold;"></i>';
+                } else if(index === 1) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: silver;"></i>';
+                } else if(index === 2) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: #cd7f32;"></i>';
+                } else {
+                    rankIcon = `<span style="color: #999;">${index + 1}</span>`;
+                }
+                
+                // 获取商品剩余库存
+                const inventoryItem = appData.inventory.find(item => item.product === name);
+                const stock = inventoryItem ? inventoryItem.stock : 0;
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${rankIcon} ${name}</div>
+                            <div class="item-detail">本月销量: ${quantity}个 · 占比: ${percentage}%</div>
+                            <div class="item-detail">剩余库存: ${stock}个</div>
+                        </div>
+                        <div class="item-value">
+                            ${quantity}个
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // 更新客户销售额排行
+        function updateCustomerRankList(container) {
+            // 获取本月时间范围
+            const now = new Date();
+            const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            // 收集时间范围内的所有客户销售额
+            const customerSales = {};
+            
+            appData.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if(saleDate >= startDate && saleDate <= endDate) {
+                    if(!customerSales[sale.customer]) {
+                        customerSales[sale.customer] = 0;
+                    }
+                    customerSales[sale.customer] += sale.price * sale.quantity;
+                }
+            });
+            
+            // 转换为数组并排序
+            const sortedCustomers = Object.entries(customerSales).sort((a, b) => b[1] - a[1]);
+            
+            if(sortedCustomers.length === 0) {
+                container.innerHTML = '<p class="empty-hint">本月还没有销售记录</p>';
+                return;
+            }
+            
+            // 生成排行榜HTML
+            let html = '<div style="margin-top: 10px;">';
+            
+            // 计算总销售额用于计算占比
+            const totalSales = sortedCustomers.reduce((sum, customer) => sum + customer[1], 0);
+            
+            // 查询欠款信息
             const customerDebt = calculateCustomerDebt();
-            const debt = customerDebt[selectedCustomer] || 0;
             
-            document.getElementById('payment-debt').value = '¥' + debt.toFixed(2);
+            sortedCustomers.forEach((customer, index) => {
+                const [name, amount] = customer;
+                const percentage = Math.round(amount / totalSales * 100);
+                
+                // 根据排名显示不同的奖杯图标
+                let rankIcon = '';
+                if(index === 0) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: gold;"></i>';
+                } else if(index === 1) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: silver;"></i>';
+                } else if(index === 2) {
+                    rankIcon = '<i class="fas fa-trophy" style="color: #cd7f32;"></i>';
+                } else {
+                    rankIcon = `<span style="color: #999;">${index + 1}</span>`;
+                }
+                
+                // 客户欠款状态
+                const debt = customerDebt[name] || 0;
+                const debtStatus = debt > 0 ?
+                    `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` :
+                    `<span class="badge badge-success">无欠款</span>`;
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${rankIcon} ${name}</div>
+                            <div class="item-detail">本月销售: ${formatCurrency(amount)} · 占比: ${percentage}%</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(amount)}
+                            ${debtStatus}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
         
-        // 格式化手机号(隐藏中间4位)
-        function formatPhone(phone) {
-            if(!phone || phone.length < 7) return phone;
-            return phone.slice(0, 3) + '****' + phone.slice(-4);
+        // 更新账款统计
+        function updateDebtStats() {
+            const container = document.getElementById('debt-stats');
+            
+            if(!container) return;
+            
+            // 计算客户欠款
+            const customerDebt = calculateCustomerDebt();
+            
+            // 获取有欠款的客户
+            const debtCustomers = Object.entries(customerDebt)
+                .filter(customer => customer[1] > 0)
+                .sort((a, b) => b[1] - a[1]);
+            
+            if(debtCustomers.length === 0) {
+                container.innerHTML = '<p class="empty-hint">没有客户欠款记录</p>';
+                return;
+            }
+            
+            // 计算总欠款
+            const totalDebt = debtCustomers.reduce((sum, customer) => sum + customer[1], 0);
+            
+            // 生成账款统计HTML
+            let html = `
+                <div style="margin-bottom: 15px;">
+                    <p><strong>总欠款:</strong> ${formatCurrency(totalDebt)}</p>
+                    <p><strong>欠款客户数:</strong> ${debtCustomers.length}个</p>
+                </div>
+            `;
+            
+            // 展示欠款客户列表(前5)
+            html += '<div style="margin-top: 10px;">';
+            
+            debtCustomers.slice(0, 5).forEach((customer, index) => {
+                const [name, amount] = customer;
+                const percentage = Math.round(amount / totalDebt * 100);
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <div class="item-name">${name}</div>
+                            <div class="item-detail">欠款占比: ${percentage}%</div>
+                        </div>
+                        <div class="item-value">
+                            ${formatCurrency(amount)}
+                            <span class="badge badge-danger">未结清</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if(debtCustomers.length > 5) {
+                html += `<div style="text-align: center; margin-top: 10px; font-size: 12px; color: #666;">还有${debtCustomers.length - 5}个客户有欠款</div>`;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
         
+        // 检查低库存商品
+        function checkLowStockItems() {
+            if(!appData.settings.lowStockAlert) return;
+            
+            // 查找低库存商品
+            const lowStockItems = appData.inventory.filter(item => 
+                item.stock <= appData.settings.lowStockThreshold
+            );
+            
+            if(lowStockItems.length > 0) {
+                if(lowStockItems.length === 1) {
+                    toast.warning(`商品"${lowStockItems[0].product}"库存不足，仅剩${lowStockItems[0].stock}个。`);
+                } else {
+                    toast.warning(`有${lowStockItems.length}种商品库存不足，请尽快补货。`);
+                }
+            }
+        }
+        
+       // 检查未结账欠款
+        function checkUnpaidDebt() {
+            if(!appData.settings.debtReminder) return;
+            
+            // 获取提醒阈值
+            const daysThreshold = appData.settings.debtReminderDays;
+            const thresholdDate = new Date();
+            thresholdDate.setDate(thresholdDate.getDate() - daysThreshold);
+            
+            // 查找超过阈值天数的未结清账款
+            const overdueSales = appData.sales.filter(sale => 
+                sale.payment !== '已结清' && 
+                new Date(sale.date) <= thresholdDate
+            );
+            
+            if(overdueSales.length > 0) {
+                // 按客户分组
+                const overdueCustomers = {};
+                overdueSales.forEach(sale => {
+                    if(!overdueCustomers[sale.customer]) {
+                        overdueCustomers[sale.customer] = [];
+                    }
+                    overdueCustomers[sale.customer].push(sale);
+                });
+                
+                const customerCount = Object.keys(overdueCustomers).length;
+                if(customerCount === 1) {
+                    const customerName = Object.keys(overdueCustomers)[0];
+                    const sales = overdueCustomers[customerName];
+                    toast.warning(`客户"${customerName}"有${sales.length}笔账款超过${daysThreshold}天未结清。`);
+                } else {
+                    toast.warning(`有${customerCount}位客户的账款超过${daysThreshold}天未结清，请及时跟进。`);
+                }
+            }
+        }
+
         // 导出数据
         function exportData() {
-            const data = localStorage.getItem('poultryData');
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
+            // 获取当前日期作为文件名一部分
+            const today = new Date().toISOString().slice(0, 10);
+            const fileName = `禽易记数据备份_${today}.json`;
             
+            // 获取数据
+            const dataString = localStorage.getItem('poultryData');
+            
+            // 创建下载链接
+            const blob = new Blob([dataString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = '禽易记数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
+            a.download = fileName;
+            
+            // 触发下载
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+            
+            toast.success('数据导出成功!');
         }
         
         // 导入数据
         function importData(event) {
             const file = event.target.files[0];
-            
-            if(!file) {
-                return;
-            }
+            if(!file) return;
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
-                    const data = JSON.parse(e.target.result);
+                    // 尝试解析JSON
+                    const importedData = JSON.parse(e.target.result);
                     
-                    // 验证数据格式
-                    if(!data.purchases || !data.sales || !data.customers || !data.inventory) {
+                    // 验证数据结构
+                    if(!importedData.purchases || !importedData.sales || !importedData.customers || !importedData.inventory) {
                         throw new Error('数据格式不正确');
                     }
                     
-                    localStorage.setItem('poultryData', JSON.stringify(data));
-                    alert('数据导入成功!');
-                    location.reload();
+                    // 确认导入
+                    confirmDialog.show('导入将覆盖当前所有数据，是否继续？', (confirmed) => {
+                        if(confirmed) {
+                            // 保存导入的数据
+                            localStorage.setItem('poultryData', e.target.result);
+                            
+                            // 重新加载页面
+                            toast.success('数据导入成功，正在重新加载...');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        }
+                    });
+                    
                 } catch(error) {
-                    alert('导入失败: ' + error.message);
+                    toast.error('导入失败: ' + error.message);
                 }
             };
+            
             reader.readAsText(file);
         }
         
-        // 在页面加载完成后检查是否显示全屏提示
-        document.addEventListener('DOMContentLoaded', function() {
-            setFullscreen();
-        });
+        // 确认清除数据
+        function confirmClearData() {
+            confirmDialog.show('确定要清除所有数据吗？此操作不可恢复!', (confirmed) => {
+                if(confirmed) {
+                    localStorage.removeItem('poultryData');
+                    toast.success('数据已清除，正在重新加载...');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            });
+        }
+        
+        // 显示库存设置
+        function showInventorySettings() {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.style.display = 'flex';
+            
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-title">库存设置</div>
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <label class="form-label">低库存阈值</label>
+                            <input type="number" class="form-control" id="setting-inventory-threshold" value="${appData.settings.lowStockThreshold}">
+                            <small style="color: #666;">当库存低于此值时将显示警告</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">默认毛利率(%)</label>
+                            <input type="number" class="form-control" id="setting-markup-percent" value="15">
+                            <small style="color: #666;">新商品进货时的默认加价百分比</small>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" id="inventory-settings-cancel">取消</button>
+                        <button class="btn btn-primary btn-sm" id="inventory-settings-save">保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到文档
+            document.body.appendChild(modal);
+            
+            // 绑定按钮事件
+            document.getElementById('inventory-settings-cancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('inventory-settings-save').addEventListener('click', () => {
+                const thresholdInput = document.getElementById('setting-inventory-threshold');
+                const threshold = parseInt(thresholdInput.value);
+                
+                if(isNaN(threshold) || threshold < 0) {
+                    toast.error('请输入有效的阈值!');
+                    return;
+                }
+                
+                // 更新设置
+                appData.settings.lowStockThreshold = threshold;
+                
+                // 保存数据
+                saveAppData();
+                
+                // 显示成功消息
+                toast.success('库存设置已保存!');
+                
+                // 更新界面
+                updateInventoryList();
+                
+                // 关闭模态框
+                document.body.removeChild(modal);
+            });
+        }
     </script>
 </body>
 </html>
