@@ -3117,61 +3117,73 @@ setTimeout(updateDashboard, 100);
     });
     
     return customerDebt;
-}                // 生成分页控件
-        function updatePagination(container, totalPages, currentPage, callback) {
-            if(totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
-            
-            let html = '';
-            
-            // 上一页按钮
-            const prevDisabled = currentPage === 1;
-            html += `<button class="pagination-btn ${prevDisabled ? 'disabled' : ''}" 
-                ${prevDisabled ? 'disabled' : `onclick="handlePageChange(${currentPage - 1}, ${callback.name})"`}>
-                <i class="fas fa-chevron-left"></i>
-            </button>`;
-            
-            // 页码按钮
-            const maxButtons = 5;
-            const halfMaxButtons = Math.floor(maxButtons / 2);
-            
-            let startPage = Math.max(1, currentPage - halfMaxButtons);
-            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-            
-            if(endPage - startPage + 1 < maxButtons) {
-                startPage = Math.max(1, endPage - maxButtons + 1);
-            }
-            
-            for(let i = startPage; i <= endPage; i++) {
-                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
-                    onclick="handlePageChange(${i}, ${callback.name})">${i}</button>`;
-            }
-            
-            // 下一页按钮
-            const nextDisabled = currentPage === totalPages;
-            html += `<button class="pagination-btn ${nextDisabled ? 'disabled' : ''}" 
-                ${nextDisabled ? 'disabled' : `onclick="handlePageChange(${currentPage + 1}, ${callback.name})"`}>
-                <i class="fas fa-chevron-right"></i>
-            </button>`;
-            
-            container.innerHTML = html;
-        }
-        
-        // 分页按钮点击处理
-        function handlePageChange(page, callbackName) {
-            if(callbackName === 'updateCustomerList') {
-                currentState.customerPage = page;
-                updateCustomerList();
-            } else if(callbackName === 'updateInventoryList') {
-                currentState.inventoryPage = page;
-                updateInventoryList();
-            } else if(callbackName === 'updateTransactionsList') {
-                currentState.transactionPage = page;
-                updateTransactionsList();
-            }
-        }
+}               
+       // 生成分页控件
+function updatePagination(container, totalPages, currentPage, callbackFunction) {
+    if(totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    
+    // 上一页按钮
+    const prevDisabled = currentPage === 1;
+    html += `<button class="pagination-btn ${prevDisabled ? 'disabled' : ''}" 
+        ${prevDisabled ? 'disabled' : `onclick="changePage(${currentPage - 1}, '${container.id}')"`}>
+        <i class="fas fa-chevron-left"></i>
+    </button>`;
+    
+    // 页码按钮
+    const maxButtons = 5;
+    const halfMaxButtons = Math.floor(maxButtons / 2);
+    
+    let startPage = Math.max(1, currentPage - halfMaxButtons);
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    if(endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    for(let i = startPage; i <= endPage; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+            onclick="changePage(${i}, '${container.id}')">${i}</button>`;
+    }
+    
+    // 下一页按钮
+    const nextDisabled = currentPage === totalPages;
+    html += `<button class="pagination-btn ${nextDisabled ? 'disabled' : ''}" 
+        ${nextDisabled ? 'disabled' : `onclick="changePage(${currentPage + 1}, '${container.id}')"`}>
+        <i class="fas fa-chevron-right"></i>
+    </button>`;
+    
+    container.innerHTML = html;
+    
+    // 将回调函数存储到container元素中，以便后续使用
+    container.callbackFunction = callbackFunction;
+}
+
+// 分页按钮点击处理
+function changePage(page, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !container.callbackFunction) return;
+    
+    // 根据container ID确定是哪种分页并调用对应的回调
+    if (containerId === 'customer-pagination') {
+        currentState.customerPage = page;
+        updateCustomerList();
+    } else if (containerId === 'inventory-pagination') {
+        currentState.inventoryPage = page;
+        updateInventoryList();
+    } else if (containerId === 'transaction-pagination') {
+        currentState.transactionPage = page;
+        updateTransactionsList();
+    } else if (containerId === 'transactions-pagination') {
+        // 客户详情页中的交易分页
+        updateCustomerTransactions(currentState.currentCustomer, 
+            document.querySelector('#customer-detail-screen .filter-tag.active').getAttribute('data-filter'));
+    }
+}  
         
         // 编辑库存商品
         function editInventoryItem(productName) {
