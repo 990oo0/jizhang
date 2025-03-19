@@ -718,13 +718,13 @@
                         </datalist>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">进货数量</label>
-                        <input type="number" class="form-control" id="purchase-quantity" placeholder="输入数量">
-                    </div>
+    <label class="form-label">进货数量(斤)</label>
+    <input type="number" class="form-control" id="purchase-quantity" placeholder="输入数量">
+</div>
                     <div class="form-group">
-                        <label class="form-label">进货单价(元)</label>
-                        <input type="number" step="0.1" class="form-control" id="purchase-price" placeholder="输入单价">
-                    </div>
+    <label class="form-label">进货单价(元/斤)</label>
+    <input type="number" step="0.1" class="form-control" id="purchase-price" placeholder="输入单价">
+</div>
                     <div class="form-group">
                         <label class="form-label">供应商</label>
                         <input type="text" class="form-control" id="purchase-supplier" placeholder="输入供应商名称" list="supplier-list">
@@ -768,13 +768,13 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">销售数量</label>
-                        <input type="number" class="form-control" id="sale-quantity" placeholder="输入数量" onchange="updateTotalPrice()">
-                    </div>
+    <label class="form-label">销售数量(斤)</label>
+    <input type="number" class="form-control" id="sale-quantity" placeholder="输入数量" onchange="updateTotalPrice()">
+</div>
                     <div class="form-group">
-                        <label class="form-label">销售单价(元)</label>
-                        <input type="number" step="0.1" class="form-control" id="sale-price" placeholder="输入单价" onchange="updateTotalPrice()">
-                    </div>
+    <label class="form-label">销售单价(元/斤)</label>
+    <input type="number" step="0.1" class="form-control" id="sale-price" placeholder="输入单价" onchange="updateTotalPrice()">
+</div>
                     <div class="form-group">
                         <label class="form-label">总价(元)</label>
                         <input type="number" step="0.1" class="form-control" id="sale-total" placeholder="总价" readonly>
@@ -1551,46 +1551,48 @@ function setupEventListeners() {
 
         // 切换显示屏幕
         function showScreen(screenId) {
-            // 隐藏所有屏幕
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.style.display = 'none';
-            });
-            
-            // 显示目标屏幕
-            document.getElementById(screenId).style.display = 'block';
-            
-            // 保存当前屏幕ID
-            currentState.currentScreen = screenId;
-            
-            // 更新导航栏高亮
-            updateNavigation(screenId);
-            
-            // 显示/隐藏返回按钮
-            const backBtn = document.getElementById('header-back-btn');
-            backBtn.style.display = screenId === 'home-screen' ? 'none' : 'block';
-            
-            // 根据屏幕ID执行特定逻辑
-            if(screenId === 'inventory-screen') {
-                updateInventoryList();
-            } else if(screenId === 'customer-form') {
-                updateCustomerList();
-            } else if(screenId === 'payment-form') {
-                updatePaymentCustomerList();
-                updateUnpaidBillsList();
-            } else if(screenId === 'report-screen') {
-                initReportChart();
-                updateRankList('product');
-                updateDebtStats();
-            } else if(screenId === 'transactions-screen') {
-                updateTransactionsList();
-            } else if(screenId.includes('settings')) {
-                // 加载设置值
-                document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
-                document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
-                document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
-                document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
-            }
-        }
+    // 隐藏所有屏幕
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.style.display = 'none';
+    });
+    
+    // 显示目标屏幕
+    document.getElementById(screenId).style.display = 'block';
+    
+    // 保存当前屏幕ID
+    currentState.currentScreen = screenId;
+    
+    // 更新导航栏高亮
+    updateNavigation(screenId);
+    
+    // 显示/隐藏返回按钮
+    const backBtn = document.getElementById('header-back-btn');
+    backBtn.style.display = screenId === 'home-screen' ? 'none' : 'block';
+    
+    // 根据屏幕ID执行特定逻辑
+    if(screenId === 'home-screen') {
+        updateDashboard();
+    } else if(screenId === 'inventory-screen') {
+        updateInventoryList();
+    } else if(screenId === 'customer-form') {
+        updateCustomerList();
+    } else if(screenId === 'payment-form') {
+        updatePaymentCustomerList();
+        updateUnpaidBillsList();
+    } else if(screenId === 'report-screen') {
+        initReportChart();
+        updateRankList('product');
+        updateDebtStats();
+    } else if(screenId === 'transactions-screen') {
+        updateTransactionsList();
+    } else if(screenId.includes('settings')) {
+        // 加载设置值
+        document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
+        document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
+        document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
+        document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
+    }
+}
 
         // 更新导航栏高亮
         function updateNavigation(screenId) {
@@ -1672,20 +1674,19 @@ function setupEventListeners() {
                     '<span class="low-stock">库存不足</span>' : '';
                 
                 inventoryList.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${item.product} ${lowStockLabel}</div>
-                            <div class="item-detail">库存: ${item.stock}个</div>
-                            <div class="progress-bar">
-                                <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
-                            </div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(item.price)}/个
-                        </div>
-                    </div>
-                `;
-            });
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${item.product} ${lowStockLabel}</div>
+            <div class="item-detail">库存: ${item.stock}斤</div>
+            <div class="progress-bar">
+                <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
+            </div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(item.price)}/斤
+        </div>
+    </div>
+`;            });
             
             // 如果有更多项，显示"查看更多"
             if(appData.inventory.length > 4) {
@@ -1726,18 +1727,17 @@ function setupEventListeners() {
                 const totalAmount = sale.price * sale.quantity;
                 
                 transactionsContainer.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${sale.customer}</div>
-                            <div class="item-detail">${formatDate(sale.date)} · ${sale.product} x${sale.quantity}</div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(totalAmount)}
-                            <span class="badge ${badgeClass}">${sale.payment}</span>
-                        </div>
-                    </div>
-                `;
-            });
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${sale.customer}</div>
+            <div class="item-detail">${formatDate(sale.date)} · ${sale.product} x${sale.quantity}斤</div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(totalAmount)}
+            <span class="badge ${badgeClass}">${sale.payment}</span>
+        </div>
+    </div>
+`;            });
             
             // 如果有更多项，显示"查看更多"
             if(appData.sales.length > 3) {
@@ -2018,7 +2018,7 @@ function setupEventListeners() {
             }
             
             if(appData.inventory[inventoryIndex].stock < quantity) {
-                toast.error(`库存不足，当前${product}库存为${appData.inventory[inventoryIndex].stock}个！`);
+                toast.error(`库存不足，当前${product}库存为${appData.inventory[inventoryIndex].stock}斤！`);
                 return;
             }
             
@@ -2072,6 +2072,7 @@ document.getElementById('sale-date').value = new Date().toISOString().split('T')
 
 // 返回主页并更新显示
 showScreen('home-screen');
+updateDashboard();
         }
         
         // 保存客户数据
@@ -2351,18 +2352,17 @@ showScreen('home-screen');
                 }
                 
                 html += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${sale.product} x${sale.quantity}</div>
-                            <div class="item-detail">${formatDate(sale.date)}</div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(amount)}
-                            <span class="badge ${badgeClass}">${sale.payment}</span>
-                        </div>
-                    </div>
-                `;
-            });
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${sale.product} x${sale.quantity}斤</div>
+            <div class="item-detail">${formatDate(sale.date)}</div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(amount)}
+            <span class="badge ${badgeClass}">${sale.payment}</span>
+        </div>
+    </div>
+`;            });
             
             html += '</div>';
             container.innerHTML = html;
@@ -2537,25 +2537,24 @@ function updateCustomerList() {
                 const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
                 
                 html += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${item.product} ${lowStockLabel}</div>
-                            <div class="item-detail">成本: ${formatCurrency(item.cost)}/个 · 毛利: ${marginPercent}%</div>
-                            <div class="item-detail">库存: ${item.stock}个</div>
-                            <div class="progress-bar">
-                                <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
-                            </div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(item.price)}/个
-                            <div class="action-icons">
-                                <i class="fas fa-edit action-icon edit" onclick="editInventoryItem('${item.product}')" title="编辑商品"></i>
-                                <i class="fas fa-plus action-icon" onclick="quickAddStock('${item.product}')" title="快速补货"></i>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${item.product} ${lowStockLabel}</div>
+            <div class="item-detail">成本: ${formatCurrency(item.cost)}/斤 · 毛利: ${marginPercent}%</div>
+            <div class="item-detail">库存: ${item.stock}斤</div>
+            <div class="progress-bar">
+                <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
+            </div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(item.price)}/斤
+            <div class="action-icons">
+                <i class="fas fa-edit action-icon edit" onclick="editInventoryItem('${item.product}')" title="编辑商品"></i>
+                <i class="fas fa-plus action-icon" onclick="quickAddStock('${item.product}')" title="快速补货"></i>
+            </div>
+        </div>
+    </div>
+`;            });
             
             container.innerHTML = html;
             
@@ -2720,40 +2719,39 @@ setInterval(() => {
                     }
                     
                     html += `
-                        <div class="list-item">
-                            <div class="item-info">
-                                <div class="item-name">销售: ${transaction.product} x${transaction.quantity}</div>
-                                <div class="item-detail">
-                                    客户: ${transaction.customer} · ${formatDate(transaction.date)}
-                                    ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
-                                </div>
-                            </div>
-                            <div class="item-value">
-                                ${formatCurrency(amount)}
-                                <span class="badge ${badgeClass}">${transaction.payment}</span>
-                            </div>
-                        </div>
-                    `;
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">销售: ${transaction.product} x${transaction.quantity}斤</div>
+            <div class="item-detail">
+                客户: ${transaction.customer} · ${formatDate(transaction.date)}
+                ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
+            </div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(amount)}
+            <span class="badge ${badgeClass}">${transaction.payment}</span>
+        </div>
+    </div>
+`;
                 } else if(transaction.type === 'purchase') {
                     // 进货记录
                     const amount = transaction.price * transaction.quantity;
                     
-                    html += `
-                        <div class="list-item">
-                            <div class="item-info">
-                                <div class="item-name">进货: ${transaction.product} x${transaction.quantity}</div>
-                                <div class="item-detail">
-                                    供应商: ${transaction.supplier || '未指定'} · ${formatDate(transaction.date)}
-                                    ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
-                                </div>
-                            </div>
-                            <div class="item-value">
-                                ${formatCurrency(amount)}
-                                <span class="badge badge-info">进货</span>
-                            </div>
-                        </div>
-                    `;
-                } else if(transaction.type === 'payment') {
+                 html += `
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">进货: ${transaction.product} x${transaction.quantity}斤</div>
+            <div class="item-detail">
+                供应商: ${transaction.supplier || '未指定'} · ${formatDate(transaction.date)}
+                ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
+            </div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(amount)}
+            <span class="badge badge-info">进货</span>
+        </div>
+    </div>
+`;                   } else if(transaction.type === 'payment') {
                     // 结账记录
                     html += `
                         <div class="list-item">
@@ -2808,7 +2806,7 @@ const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
                 // 添加到select，并标注库存
                 const selectOption = document.createElement('option');
                 selectOption.value = item.product;
-                selectOption.textContent = `${item.product} (库存: ${item.stock})`;
+                selectOption.textContent = `${item.product} (库存: ${item.stock}斤)`;
                 
                 // 如果库存低，添加警告
                 if(item.stock <= appData.settings.lowStockThreshold) {
@@ -3081,6 +3079,7 @@ for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
             
             // 返回主页
             showScreen('home-screen');
+setTimeout(updateDashboard, 100);
         }
         // 修改calculateCustomerDebt函数
 function calculateCustomerDebt() {
@@ -3173,26 +3172,24 @@ function calculateCustomerDebt() {
                 return;
             }
             
-            // 使用对话框让用户编辑商品信息
-            const html = `
-                <div class="form-group">
-                    <label class="form-label">商品名称</label>
-                    <input type="text" class="form-control" id="edit-product-name" value="${item.product}" readonly>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">当前库存</label>
-                    <input type="number" class="form-control" id="edit-product-stock" value="${item.stock}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">成本价(元)</label>
-                    <input type="number" step="0.1" class="form-control" id="edit-product-cost" value="${item.cost}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">销售价(元)</label>
-                    <input type="number" step="0.1" class="form-control" id="edit-product-price" value="${item.price}">
-                </div>
-            `;
-            
+             const html = `
+    <div class="form-group">
+        <label class="form-label">商品名称</label>
+        <input type="text" class="form-control" id="edit-product-name" value="${item.product}" readonly>
+    </div>
+    <div class="form-group">
+        <label class="form-label">当前库存(斤)</label>
+        <input type="number" class="form-control" id="edit-product-stock" value="${item.stock}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">成本价(元/斤)</label>
+        <input type="number" step="0.1" class="form-control" id="edit-product-cost" value="${item.cost}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">销售价(元/斤)</label>
+        <input type="number" step="0.1" class="form-control" id="edit-product-price" value="${item.price}">
+    </div>
+`;          
             // 创建模态框
             const modal = document.createElement('div');
             modal.className = 'modal-backdrop';
@@ -3255,29 +3252,28 @@ function calculateCustomerDebt() {
                 return;
             }
             
-            // 使用对话框让用户输入补货数量和成本
             const html = `
-                <div class="form-group">
-                    <label class="form-label">商品名称</label>
-                    <input type="text" class="form-control" value="${item.product}" readonly>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">当前库存</label>
-                    <input type="text" class="form-control" value="${item.stock}" readonly>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">补货数量</label>
-                    <input type="number" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">进货单价(元)</label>
-                    <input type="number" step="0.1" class="form-control" id="add-stock-cost" value="${item.cost}" placeholder="输入进货单价">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">供应商</label>
-                    <input type="text" class="form-control" id="add-stock-supplier" list="supplier-list" placeholder="输入供应商名称">
-                </div>
-            `;
+    <div class="form-group">
+        <label class="form-label">商品名称</label>
+        <input type="text" class="form-control" value="${item.product}" readonly>
+    </div>
+    <div class="form-group">
+        <label class="form-label">当前库存(斤)</label>
+        <input type="text" class="form-control" value="${item.stock}" readonly>
+    </div>
+    <div class="form-group">
+        <label class="form-label">补货数量(斤)</label>
+        <input type="number" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
+    </div>
+    <div class="form-group">
+        <label class="form-label">进货单价(元/斤)</label>
+        <input type="number" step="0.1" class="form-control" id="add-stock-cost" value="${item.cost}" placeholder="输入进货单价">
+    </div>
+    <div class="form-group">
+        <label class="form-label">供应商</label>
+        <input type="text" class="form-control" id="add-stock-supplier" list="supplier-list" placeholder="输入供应商名称">
+    </div>
+`;
             
             // 创建模态框
             const modal = document.createElement('div');
@@ -3900,17 +3896,17 @@ function calculateCustomerDebt() {
             let summaryHtml = '<div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">';
             
             if(sortedProducts.length > 0) {
-                summaryHtml += `<p><strong>最畅销商品:</strong> ${sortedProducts[0][0]} (${sortedProducts[0][1]}个)</p>`;
+                summaryHtml += `<p><strong>最畅销商品:</strong> ${sortedProducts[0][0]} (${sortedProducts[0][1]}斤)</p>`;
                 
                 // 计算总销量
                 const totalSales = sortedProducts.reduce((sum, product) => sum + product[1], 0);
-                summaryHtml += `<p><strong>总销量:</strong> ${totalSales}个</p>`;
+                summaryHtml += `<p><strong>总销量:</strong> ${totalSales}斤</p>`;
                 
                 // 计算平均每笔销量
                 const avgSales = totalSales / appData.sales.filter(sale => 
                     new Date(sale.date) >= startDate && new Date(sale.date) <= endDate
                 ).length;
-                summaryHtml += `<p><strong>平均每笔销量:</strong> ${avgSales.toFixed(1)}个</p>`;
+                summaryHtml += `<p><strong>平均每笔销量:</strong> ${avgSales.toFixed(1)}斤</p>`;
             } else {
                 summaryHtml += '<p>该时间段内没有销售记录</p>';
             }
@@ -4068,18 +4064,17 @@ function calculateCustomerDebt() {
                 const stock = inventoryItem ? inventoryItem.stock : 0;
                 
                 html += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${rankIcon} ${name}</div>
-                            <div class="item-detail">本月销量: ${quantity}个 · 占比: ${percentage}%</div>
-                            <div class="item-detail">剩余库存: ${stock}个</div>
-                        </div>
-                        <div class="item-value">
-                            ${quantity}个
-                        </div>
-                    </div>
-                `;
-            });
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${rankIcon} ${name}</div>
+            <div class="item-detail">本月销量: ${quantity}斤 · 占比: ${percentage}%</div>
+            <div class="item-detail">剩余库存: ${stock}斤</div>
+        </div>
+        <div class="item-value">
+            ${quantity}斤
+        </div>
+    </div>
+`;            });
             
             html += '</div>';
             container.innerHTML = html;
@@ -4232,7 +4227,7 @@ function calculateCustomerDebt() {
             
             if(lowStockItems.length > 0) {
                 if(lowStockItems.length === 1) {
-                    toast.warning(`商品"${lowStockItems[0].product}"库存不足，仅剩${lowStockItems[0].stock}个。`);
+                    toast.warning(`商品"${lowStockItems[0].product}"库存不足，仅剩${lowStockItems[0].stock}斤。`);
                 } else {
                     toast.warning(`有${lowStockItems.length}种商品库存不足，请尽快补货。`);
                 }
@@ -4275,7 +4270,9 @@ function calculateCustomerDebt() {
             }
         }
 
-        // 导出数据
+         
+        
+// 导出数据
 function exportData() {
     // 创建选择格式的模态框
     const modal = document.createElement('div');
@@ -4360,8 +4357,7 @@ function exportData() {
         const fileName = `禽易记库存数据_${today}.csv`;
         
         // 准备CSV数据
-        let csvContent = '\ufeff商品名称,当前库存,成本价,销售价,毛利率\n';
-        
+          let csvContent = '\ufeff商品名称,当前库存(斤),成本价(元/斤),销售价(元/斤),毛利率\n';      
         appData.inventory.forEach(item => {
             const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
             
@@ -4385,9 +4381,7 @@ function exportData() {
     
     // 绑定客户CSV导出按钮事件
     document.getElementById('export-customers-csv').addEventListener('click', () => {
-        const fileName = `禽易记客户信息_${today}.csv`;
-        
-        // 计算客户欠款
+        const fileName = `禽易记客户信息_${today}.csv`;欠款
         const customerDebt = calculateCustomerDebt();
         
         // 准备CSV数据
@@ -4395,8 +4389,7 @@ function exportData() {
         
         appData.customers.forEach(customer => {
             const debt = customerDebt[customer.name] || 0;
-            
-            // CSV每一行的数据
+         // CSV每一行的数据
             const row = [
                 escapeCsvField(customer.name),
                 escapeCsvField(customer.contact || ''),
@@ -4456,8 +4449,8 @@ function downloadFile(fileName, content, mimeType) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, 0);
-}
-        
+}   
+                
         // 导入数据
         function importData(event) {
             const file = event.target.files[0];
