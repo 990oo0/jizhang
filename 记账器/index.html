@@ -2057,17 +2057,21 @@ function setupEventListeners() {
             appData.sales.push(sale);
             
             // 保存数据
-            saveAppData();
-            
-            // 显示成功消息
-            toast.success('销售记录保存成功!');
-            
-            // 重置表单
-            document.getElementById('new-sale').reset();
-            document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
-            
-            // 返回主页并更新显示
-            showScreen('home-screen');
+saveAppData();
+
+// 显示成功消息
+toast.success('销售记录保存成功!');
+
+// 更新客户欠款信息（新增这两行）
+updateCustomerList();
+updatePaymentCustomerList();
+
+// 重置表单
+document.getElementById('new-sale').reset();
+document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
+
+// 返回主页并更新显示
+showScreen('home-screen');
         }
         
         // 保存客户数据
@@ -3005,47 +3009,61 @@ const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
             appData.payments.push(payment);
             
             // 更新销售记录的支付状态
-            const actualAmount = Math.min(amount, debt);
-            let remainingAmount = actualAmount;
-            
-            // 筛选该客户的未结清销售，并按日期排序（先结算最早的）
-            const unpaidSales = appData.sales.filter(sale => 
-                sale.customer === selectedCustomer && sale.payment !== '已结清'
-            ).sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
-                const sale = unpaidSales[i];
-                const saleAmount = sale.price * sale.quantity;
-                let debtAmount = 0;
+const actualAmount = Math.min(amount, debt);
+let remainingAmount = actualAmount;
+
+// 筛选该客户的未结清销售，并按日期排序（先结算最早的）
+const unpaidSales = appData.sales.filter(sale => 
+    sale.customer === selectedCustomer && sale.payment !== '已结清'
+).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
+    const sale = unpaidSales[i];
+    const saleAmount = sale.price * sale.quantity;
+    let debtAmount = 0;
+    
+    if(sale.payment === '未结账') {
+        debtAmount = saleAmount;
+    } else if(sale.payment === '部分结账') {
+        // 计算实际欠款金额
+        const paidAmount = sale.partialAmount || (saleAmount * 0.5);
+        debtAmount = saleAmount - paidAmount;
+    }
+    
+    const saleIndex = appData.sales.findIndex(s => 
+        s.customer === sale.customer && 
+        s.product === sale.product && 
+        s.date === sale.date && 
+        s.timestamp === sale.timestamp
+    );
+    
+    if(saleIndex !== -1) {
+        if(remainingAmount >= debtAmount) {
+            // 完全结清这笔销售
+            appData.sales[saleIndex].payment = '已结清';
+            appData.sales[saleIndex].paymentMethod = method;
+            remainingAmount -= debtAmount;
+        } else {
+            // 部分结清这笔销售
+            if(sale.payment === '未结账') {
+                // 第一次部分结账
+                appData.sales[saleIndex].payment = '部分结账';
+                appData.sales[saleIndex].partialAmount = remainingAmount;
+            } else if(sale.payment === '部分结账') {
+                // 已有部分结账，增加结账金额
+                const currentPaid = appData.sales[saleIndex].partialAmount || (saleAmount * 0.5);
+                appData.sales[saleIndex].partialAmount = currentPaid + remainingAmount;
                 
-                if(sale.payment === '未结账') {
-                    debtAmount = saleAmount;
-                } else if(sale.payment === '部分结账') {
-                    debtAmount = saleAmount * 0.5; // 假设部分结账为50%
-                }
-                
-                const saleIndex = appData.sales.findIndex(s => 
-                    s.customer === sale.customer && 
-                    s.product === sale.product && 
-                    s.date === sale.date && 
-                    s.timestamp === sale.timestamp
-                );
-                
-                if(saleIndex !== -1) {
-                    if(remainingAmount >= debtAmount) {
-                        // 完全结清这笔销售
-                        appData.sales[saleIndex].payment = '已结清';
-                        appData.sales[saleIndex].paymentMethod = method;
-                        remainingAmount -= debtAmount;
-                    } else {
-                        // 部分结清这笔销售
-                        if(sale.payment === '未结账') {
-                            appData.sales[saleIndex].payment = '部分结账';
-                        }
-                        remainingAmount = 0;
-                    }
+                // 如果已付金额等于总金额，则标记为已结清
+                if(appData.sales[saleIndex].partialAmount >= saleAmount) {
+                    appData.sales[saleIndex].payment = '已结清';
+                    appData.sales[saleIndex].paymentMethod = method;
                 }
             }
+            remainingAmount = 0;
+        }
+    }
+}
             
             // 保存数据
             saveAppData();
@@ -3091,7 +3109,6 @@ function calculateCustomerDebt() {
     
     return customerDebt;
 }
-
                 // 生成分页控件
         function updatePagination(container, totalPages, currentPage, callback) {
             if(totalPages <= 1) {
