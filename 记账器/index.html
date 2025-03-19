@@ -721,9 +721,9 @@
     <label class="form-label">进货数量(斤)</label>
     <input type="number" step="0.01" class="form-control" id="purchase-quantity" placeholder="输入数量">
 </div>
-                    <div class="form-group">
+<div class="form-group">
     <label class="form-label">进货单价(元/斤)</label>
-    <input type="number" step="0.1" class="form-control" id="purchase-price" placeholder="输入单价">
+    <input type="number" step="0.01" class="form-control" id="purchase-price" placeholder="输入单价">
 </div>
                     <div class="form-group">
                         <label class="form-label">供应商</label>
@@ -767,13 +767,13 @@
                             <!-- 动态填充商品选项 -->
                         </select>
                     </div>
-                    <div class="form-group">
+                     <div class="form-group">
     <label class="form-label">销售数量(斤)</label>
     <input type="number" step="0.01" class="form-control" id="sale-quantity" placeholder="输入数量" onchange="updateTotalPrice()">
 </div>
-                    <div class="form-group">
+<div class="form-group">
     <label class="form-label">销售单价(元/斤)</label>
-    <input type="number" step="0.1" class="form-control" id="sale-price" placeholder="输入单价" onchange="updateTotalPrice()">
+    <input type="number" step="0.01" class="form-control" id="sale-price" placeholder="输入单价" onchange="updateTotalPrice()">
 </div>
                     <div class="form-group">
                         <label class="form-label">总价(元)</label>
@@ -1272,15 +1272,13 @@
         function formatCurrency(amount) {
             return '¥' + parseFloat(amount).toFixed(2);
         }
-// 添加这个新函数用于更新未结金额
 function updateRemainingAmount() {
     const totalPrice = parseFloat(document.getElementById('sale-total').value) || 0;
     const paidAmount = parseFloat(document.getElementById('sale-partial-amount').value) || 0;
-    const remainingAmount = totalPrice - paidAmount;
+    const remainingAmount = parseFloat((totalPrice - paidAmount).toFixed(2));
     
     document.getElementById('sale-remaining').value = remainingAmount > 0 ? remainingAmount.toFixed(2) : '0.00';
 }
-
 // 为销售表单中的结账方式下拉框添加事件监听
 function setupPartialPayment() {
     document.getElementById('sale-payment').addEventListener('change', function() {
@@ -1640,44 +1638,46 @@ function setupEventListeners() {
             updateSalesTrend();
         }
         
-        // 更新首页库存显示
-        function updateInventoryDisplay() {
-            const inventoryList = document.getElementById('inventory-list');
-            
-            // 清空现有内容
-            inventoryList.innerHTML = '';
-            
-            if(appData.inventory.length === 0) {
-                inventoryList.innerHTML = '<p class="empty-hint">暂无库存数据，请先添加商品进货</p>';
-                return;
-            }
-            
-            // 按库存量排序，少的在前面
-            const sortedInventory = [...appData.inventory].sort((a, b) => a.stock - b.stock);
-            
-            // 只显示前4项
-            const displayItems = sortedInventory.slice(0, 4);
-            
-            displayItems.forEach(item => {
-                // 计算库存百分比显示进度条
-                const stockPercentage = Math.min(Math.max(item.stock / 20, 0) * 100, 100);
-                
-                let progressClass = 'progress-green';
-                if(item.stock <= appData.settings.lowStockThreshold) {
-                    progressClass = 'progress-orange';
-                } else if(item.stock <= appData.settings.lowStockThreshold * 2) {
-                    progressClass = 'progress-yellow';
-                }
-                
-                // 低库存标记
-                const lowStockLabel = item.stock <= appData.settings.lowStockThreshold ? 
-                    '<span class="low-stock">库存不足</span>' : '';
-                
-                inventoryList.innerHTML += `
+         function updateInventoryDisplay() {
+    const inventoryList = document.getElementById('inventory-list');
+    
+    // 清空现有内容
+    inventoryList.innerHTML = '';
+    
+    if(appData.inventory.length === 0) {
+        inventoryList.innerHTML = '<p class="empty-hint">暂无库存数据，请先添加商品进货</p>';
+        return;
+    }
+    
+    // 按库存量排序，少的在前面
+    const sortedInventory = [...appData.inventory].sort((a, b) => a.stock - b.stock);
+    
+    // 只显示前4项
+    const displayItems = sortedInventory.slice(0, 4);
+    
+    displayItems.forEach(item => {
+        // 计算库存百分比显示进度条
+        const stockPercentage = Math.min(Math.max(item.stock / 20, 0) * 100, 100);
+        
+        let progressClass = 'progress-green';
+        if(item.stock <= appData.settings.lowStockThreshold) {
+            progressClass = 'progress-orange';
+        } else if(item.stock <= appData.settings.lowStockThreshold * 2) {
+            progressClass = 'progress-yellow';
+        }
+        
+        // 低库存标记
+        const lowStockLabel = item.stock <= appData.settings.lowStockThreshold ? 
+            '<span class="low-stock">库存不足</span>' : '';
+        
+        // 显示小数点后两位
+        const stockDisplay = parseFloat(item.stock).toFixed(2);
+        
+        inventoryList.innerHTML += `
     <div class="list-item">
         <div class="item-info">
             <div class="item-name">${item.product} ${lowStockLabel}</div>
-            <div class="item-detail">库存: ${item.stock}斤</div>
+            <div class="item-detail">库存: ${stockDisplay}斤</div>
             <div class="progress-bar">
                 <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
             </div>
@@ -1686,68 +1686,70 @@ function setupEventListeners() {
             ${formatCurrency(item.price)}/斤
         </div>
     </div>
-`;            });
-            
-            // 如果有更多项，显示"查看更多"
-            if(appData.inventory.length > 4) {
-                inventoryList.innerHTML += `
-                    <div style="text-align: center; padding: 5px 0;">
-                        <a href="#" onclick="showInventoryScreen()">查看更多 (${appData.inventory.length - 4})</a>
-                    </div>
-                `;
-            }
+`;
+    });
+    
+    // 如果有更多项，显示"查看更多"
+    if(appData.inventory.length > 4) {
+        inventoryList.innerHTML += `
+            <div style="text-align: center; padding: 5px 0;">
+                <a href="#" onclick="showInventoryScreen()">查看更多 (${appData.inventory.length - 4})</a>
+            </div>
+        `;
+    }
+}       
+        function updateTransactionsDisplay() {
+    const transactionsContainer = document.getElementById('recent-transactions');
+    
+    // 清空现有内容
+    transactionsContainer.innerHTML = '';
+    
+    if(appData.sales.length === 0) {
+        transactionsContainer.innerHTML = '<p class="empty-hint">暂无交易记录，请先添加销售数据</p>';
+        return;
+    }
+    
+    // 按时间排序，最新的在前面
+    const sortedSales = [...appData.sales].sort((a, b) => new Date(b.date) - new Date(a.date) || b.timestamp - a.timestamp);
+    
+    // 只显示前3项
+    const displayItems = sortedSales.slice(0, 3);
+    
+    displayItems.forEach(sale => {
+        let badgeClass = 'badge-success';
+        if(sale.payment === '未结账') {
+            badgeClass = 'badge-danger';
+        } else if(sale.payment === '部分结账') {
+            badgeClass = 'badge-warning';
         }
         
-        // 更新首页最近交易显示
-        function updateTransactionsDisplay() {
-            const transactionsContainer = document.getElementById('recent-transactions');
-            
-            // 清空现有内容
-            transactionsContainer.innerHTML = '';
-            
-            if(appData.sales.length === 0) {
-                transactionsContainer.innerHTML = '<p class="empty-hint">暂无交易记录，请先添加销售数据</p>';
-                return;
-            }
-            
-            // 按时间排序，最新的在前面
-            const sortedSales = [...appData.sales].sort((a, b) => new Date(b.date) - new Date(a.date) || b.timestamp - a.timestamp);
-            
-            // 只显示前3项
-            const displayItems = sortedSales.slice(0, 3);
-            
-            displayItems.forEach(sale => {
-                let badgeClass = 'badge-success';
-                if(sale.payment === '未结账') {
-                    badgeClass = 'badge-danger';
-                } else if(sale.payment === '部分结账') {
-                    badgeClass = 'badge-warning';
-                }
-                
-                const totalAmount = sale.price * sale.quantity;
-                
-                transactionsContainer.innerHTML += `
+        const totalAmount = sale.price * sale.quantity;
+        // 显示小数点后两位
+        const quantityDisplay = parseFloat(sale.quantity).toFixed(2);
+        
+        transactionsContainer.innerHTML += `
     <div class="list-item">
         <div class="item-info">
             <div class="item-name">${sale.customer}</div>
-            <div class="item-detail">${formatDate(sale.date)} · ${sale.product} x${sale.quantity}斤</div>
+            <div class="item-detail">${formatDate(sale.date)} · ${sale.product} x${quantityDisplay}斤</div>
         </div>
         <div class="item-value">
             ${formatCurrency(totalAmount)}
             <span class="badge ${badgeClass}">${sale.payment}</span>
         </div>
     </div>
-`;            });
-            
-            // 如果有更多项，显示"查看更多"
-            if(appData.sales.length > 3) {
-                transactionsContainer.innerHTML += `
-                    <div style="text-align: center; padding: 5px 0;">
-                        <a href="#" onclick="showTransactionsScreen()">查看更多 (${appData.sales.length - 3})</a>
-                    </div>
-                `;
-            }
-        }
+`;
+    });
+    
+    // 如果有更多项，显示"查看更多"
+    if(appData.sales.length > 3) {
+        transactionsContainer.innerHTML += `
+            <div style="text-align: center; padding: 5px 0;">
+                <a href="#" onclick="showTransactionsScreen()">查看更多 (${appData.sales.length - 3})</a>
+            </div>
+        `;
+    }
+}
         
         // 更新销售趋势图表
         function updateSalesTrend() {
@@ -1812,34 +1814,34 @@ function setupEventListeners() {
                 }
             }
             
-            // 计算各日期的销售额和利润
-            appData.sales.forEach(sale => {
-                const saleDate = new Date(sale.date);
-                let index = -1;
-                
-                if(format === 'day') {
-                    // 查找对应的日期索引
-                    const dateStr = formatDate(saleDate);
-                    const shortDate = dateStr.slice(5); // 只显示月-日
-                    index = labels.indexOf(shortDate);
-                } else if(format === 'month') {
-                    // 查找对应的月份索引
-                    const monthLabel = `${saleDate.getFullYear()}/${saleDate.getMonth() + 1}`;
-                    index = labels.indexOf(monthLabel);
-                }
-                
-                if(index !== -1) {
-                    // 找到相应库存商品计算利润
-                    const saleAmount = sale.price * sale.quantity;
-                    const inventoryItem = appData.inventory.find(item => item.product === sale.product);
-                    const cost = inventoryItem ? inventoryItem.cost : 0;
-                    const profit = saleAmount - (cost * sale.quantity);
-                    
-                    salesData[index] += saleAmount;
-                    profitData[index] += profit;
-                }
-            });
-            
+           // 计算各日期的销售额和利润
+appData.sales.forEach(sale => {
+    const saleDate = new Date(sale.date);
+    let index = -1;
+    
+    if(format === 'day') {
+        // 查找对应的日期索引
+        const dateStr = formatDate(saleDate);
+        const shortDate = dateStr.slice(5); // 只显示月-日
+        index = labels.indexOf(shortDate);
+    } else if(format === 'month') {
+        // 查找对应的月份索引
+        const monthLabel = `${saleDate.getFullYear()}/${saleDate.getMonth() + 1}`;
+        index = labels.indexOf(monthLabel);
+    }
+    
+    if(index !== -1) {
+        // 找到相应库存商品计算利润
+        const quantity = parseFloat(sale.quantity);
+        const saleAmount = parseFloat((sale.price * quantity).toFixed(2));
+        const inventoryItem = appData.inventory.find(item => item.product === sale.product);
+        const cost = inventoryItem ? parseFloat(inventoryItem.cost) : 0;
+        const profit = parseFloat((saleAmount - (cost * quantity)).toFixed(2));
+        
+        salesData[index] = parseFloat((salesData[index] + saleAmount).toFixed(2));
+        profitData[index] = parseFloat((profitData[index] + profit).toFixed(2));
+    }
+});            
             // 创建或更新图表
             if(currentState.salesChartInstance) {
                 currentState.salesChartInstance.destroy();
@@ -1905,143 +1907,142 @@ function setupEventListeners() {
             }
         }
         
-        // 保存进货数据
         function savePurchaseData() {
-            const productInput = document.getElementById('purchase-product');
-            const product = productInput.value.trim();
-            const quantity = parseInt(document.getElementById('purchase-quantity').value);
-            const price = parseFloat(document.getElementById('purchase-price').value);
-            const supplier = document.getElementById('purchase-supplier').value.trim();
-            const date = document.getElementById('purchase-date').value;
-            const notes = document.getElementById('purchase-notes').value.trim();
-            
-            // 验证数据
-            if(!product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-                toast.error('请填写有效的商品、数量和价格信息！');
-                return;
-            }
-            
-            // 创建进货记录
-            const purchase = {
-                product,
-                quantity,
-                price,
-                supplier,
-                date,
-                notes,
-                timestamp: Date.now()
-            };
-            
-            // 保存供应商
-            if(supplier && !appData.suppliers.includes(supplier)) {
-                appData.suppliers.push(supplier);
-            }
-            
-            // 更新库存
-            const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
-            if(inventoryIndex !== -1) {
-                // 更新现有商品库存
-                const inventory = appData.inventory[inventoryIndex];
-                const oldStock = inventory.stock;
-                const oldCost = inventory.cost;
-                const newStock = oldStock + quantity;
-                
-                // 计算加权平均成本
-                const totalCost = oldStock * oldCost + quantity * price;
-                const weightedCost = totalCost / newStock;
-                
-                appData.inventory[inventoryIndex].stock = newStock;
-                appData.inventory[inventoryIndex].cost = Math.round(weightedCost * 10) / 10;
-            } else {
-                // 添加新商品
-                const defaultMarkupPercent = 15; // 默认加价15%
-                const suggestedPrice = Math.round(price * (1 + defaultMarkupPercent / 100) * 10) / 10;
-                
-                appData.inventory.push({
-                    product,
-                    stock: quantity,
-                    cost: price,
-                    price: suggestedPrice
-                });
-            }
-            
-            // 添加到进货记录
-            appData.purchases.push(purchase);
-            
-            // 保存数据
-            saveAppData();
-            
-            // 显示成功消息
-            toast.success('进货记录保存成功!');
-            
-            // 重置表单
-            document.getElementById('new-purchase').reset();
-            document.getElementById('purchase-date').value = new Date().toISOString().split('T')[0];
-            
-            // 返回主页并更新显示
-            showScreen('home-screen');
-        }
+    const productInput = document.getElementById('purchase-product');
+    const product = productInput.value.trim();
+    const quantity = parseFloat(document.getElementById('purchase-quantity').value);
+    const price = parseFloat(document.getElementById('purchase-price').value);
+    const supplier = document.getElementById('purchase-supplier').value.trim();
+    const date = document.getElementById('purchase-date').value;
+    const notes = document.getElementById('purchase-notes').value.trim();
+    
+    // 验证数据
+    if(!product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+        toast.error('请填写有效的商品、数量和价格信息！');
+        return;
+    }
+    
+    // 创建进货记录
+    const purchase = {
+        product,
+        quantity: parseFloat(quantity.toFixed(2)),
+        price: parseFloat(price.toFixed(2)),
+        supplier,
+        date,
+        notes,
+        timestamp: Date.now()
+    };
+    
+    // 保存供应商
+    if(supplier && !appData.suppliers.includes(supplier)) {
+        appData.suppliers.push(supplier);
+    }
+    
+    // 更新库存
+    const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
+    if(inventoryIndex !== -1) {
+        // 更新现有商品库存
+        const inventory = appData.inventory[inventoryIndex];
+        const oldStock = parseFloat(inventory.stock);
+        const oldCost = parseFloat(inventory.cost);
+        const newStock = parseFloat((oldStock + quantity).toFixed(2));
         
-        // 保存销售数据
-        function saveSaleData() {
-            const customerInput = document.getElementById('sale-customer');
-            const customer = customerInput.value.trim();
-            const productSelect = document.getElementById('sale-product');
-            const product = productSelect.value;
-            const quantity = parseInt(document.getElementById('sale-quantity').value);
-            const price = parseFloat(document.getElementById('sale-price').value);
-            const payment = document.getElementById('sale-payment').value;
-            const date = document.getElementById('sale-date').value;
-            const notes = document.getElementById('sale-notes').value.trim();
-            
-            // 验证数据
-            if(!customer || !product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-                toast.error('请填写有效的客户、商品、数量和价格信息！');
-                return;
-            }
-            
-            // 检查客户是否存在
-            const customerExists = appData.customers.some(c => c.name === customer);
-            if(!customerExists) {
-                if(confirm(`客户"${customer}"不存在，是否添加新客户？`)) {
-                    showScreen('customer-form');
-                    document.getElementById('customer-name').value = customer;
-                    return;
-                }
-            }
-            
-            // 检查库存是否足够
-            const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
-            if(inventoryIndex === -1) {
-                toast.error(`商品"${product}"不存在，请先进货！`);
-                return;
-            }
-            
-            if(appData.inventory[inventoryIndex].stock < quantity) {
-                toast.error(`库存不足，当前${product}库存为${appData.inventory[inventoryIndex].stock}斤！`);
-                return;
-            }
-            
-            // 获取支付方式
-            let paymentMethod = '';
-            if(payment === '已结清') {
-                paymentMethod = document.getElementById('sale-payment-method').value;
-            }
-            let partialAmount = 0;
+        // 计算加权平均成本
+        const totalCost = oldStock * oldCost + quantity * price;
+        const weightedCost = totalCost / newStock;
+        
+        appData.inventory[inventoryIndex].stock = newStock;
+        appData.inventory[inventoryIndex].cost = parseFloat(weightedCost.toFixed(2));
+    } else {
+        // 添加新商品
+        const defaultMarkupPercent = 15; // 默认加价15%
+        const suggestedPrice = parseFloat((price * (1 + defaultMarkupPercent / 100)).toFixed(2));
+        
+        appData.inventory.push({
+            product,
+            stock: parseFloat(quantity.toFixed(2)),
+            cost: parseFloat(price.toFixed(2)),
+            price: suggestedPrice
+        });
+    }
+    
+    // 添加到进货记录
+    appData.purchases.push(purchase);
+    
+    // 保存数据
+    saveAppData();
+    
+    // 显示成功消息
+    toast.success('进货记录保存成功!');
+    
+    // 重置表单
+    document.getElementById('new-purchase').reset();
+    document.getElementById('purchase-date').value = new Date().toISOString().split('T')[0];
+    
+    // 返回主页并更新显示
+    showScreen('home-screen');
+}
+        
+      function saveSaleData() {
+    const customerInput = document.getElementById('sale-customer');
+    const customer = customerInput.value.trim();
+    const productSelect = document.getElementById('sale-product');
+    const product = productSelect.value;
+    const quantity = parseFloat(document.getElementById('sale-quantity').value);
+    const price = parseFloat(document.getElementById('sale-price').value);
+    const payment = document.getElementById('sale-payment').value;
+    const date = document.getElementById('sale-date').value;
+    const notes = document.getElementById('sale-notes').value.trim();
+    
+    // 验证数据
+    if(!customer || !product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+        toast.error('请填写有效的客户、商品、数量和价格信息！');
+        return;
+    }
+    
+    // 检查客户是否存在
+    const customerExists = appData.customers.some(c => c.name === customer);
+    if(!customerExists) {
+        if(confirm(`客户"${customer}"不存在，是否添加新客户？`)) {
+            showScreen('customer-form');
+            document.getElementById('customer-name').value = customer;
+            return;
+        }
+    }
+    
+    // 检查库存是否足够
+    const inventoryIndex = appData.inventory.findIndex(item => item.product === product);
+    if(inventoryIndex === -1) {
+        toast.error(`商品"${product}"不存在，请先进货！`);
+        return;
+    }
+    
+    if(parseFloat(appData.inventory[inventoryIndex].stock) < quantity) {
+        toast.error(`库存不足，当前${product}库存为${parseFloat(appData.inventory[inventoryIndex].stock).toFixed(2)}斤！`);
+        return;
+    }
+    
+    // 获取支付方式
+    let paymentMethod = '';
+    if(payment === '已结清') {
+        paymentMethod = document.getElementById('sale-payment-method').value;
+    }
+    let partialAmount = 0;
     if (payment === '部分结账') {
         partialAmount = parseFloat(document.getElementById('sale-partial-amount').value) || 0;
         if (partialAmount <= 0 || partialAmount >= (price * quantity)) {
             toast.error('请输入有效的已结金额！');
             return;
         }
+        partialAmount = parseFloat(partialAmount.toFixed(2));
     }
     
     // 创建销售记录，添加部分结账金额
     const sale = {
         customer,
         product,
-        quantity,
-        price,
+        quantity: parseFloat(quantity.toFixed(2)),
+        price: parseFloat(price.toFixed(2)),
         payment,
         paymentMethod: payment !== '未结账' ? document.getElementById('sale-payment-method').value : '',
         partialAmount: payment === '部分结账' ? partialAmount : 0,
@@ -2050,30 +2051,31 @@ function setupEventListeners() {
         timestamp: Date.now()
     };
                         
-            // 更新库存
-            appData.inventory[inventoryIndex].stock -= quantity;
-            
-            // 添加到销售记录
-            appData.sales.push(sale);
-            
-            // 保存数据
-saveAppData();
+    // 更新库存，保留两位小数
+    const newStock = parseFloat((appData.inventory[inventoryIndex].stock - quantity).toFixed(2));
+    appData.inventory[inventoryIndex].stock = newStock;
+    
+    // 添加到销售记录
+    appData.sales.push(sale);
+    
+    // 保存数据
+    saveAppData();
 
-// 显示成功消息
-toast.success('销售记录保存成功!');
+    // 显示成功消息
+    toast.success('销售记录保存成功!');
 
-// 更新客户欠款信息（新增这两行）
-updateCustomerList();
-updatePaymentCustomerList();
+    // 更新客户欠款信息
+    updateCustomerList();
+    updatePaymentCustomerList();
 
-// 重置表单
-document.getElementById('new-sale').reset();
-document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
+    // 重置表单
+    document.getElementById('new-sale').reset();
+    document.getElementById('sale-date').value = new Date().toISOString().split('T')[0];
 
-// 返回主页并更新显示
-showScreen('home-screen');
-updateDashboard();
-        }
+    // 返回主页并更新显示
+    showScreen('home-screen');
+    updateDashboard();
+}  
         
         // 保存客户数据
         function saveCustomerData() {
@@ -2141,18 +2143,16 @@ updateDashboard();
             }
         }
         
-        // 更新销售表单总价
-        function updateTotalPrice() {
-            const quantityInput = document.getElementById('sale-quantity');
-            const priceInput = document.getElementById('sale-price');
-            const totalInput = document.getElementById('sale-total');
-            
-            const quantity = parseInt(quantityInput.value) || 0;
-            const price = parseFloat(priceInput.value) || 0;
-            
-            totalInput.value = (quantity * price).toFixed(2);
-        }
-        
+         function updateTotalPrice() {
+    const quantityInput = document.getElementById('sale-quantity');
+    const priceInput = document.getElementById('sale-price');
+    const totalInput = document.getElementById('sale-total');
+    
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    
+    totalInput.value = (quantity * price).toFixed(2);
+}       
         // 显示库存页面
         function showInventoryScreen() {
             currentState.inventoryPage = 1;
@@ -2269,20 +2269,21 @@ updateDashboard();
                 
                 let badgeClass = sale.payment === '未结账' ? 'badge-danger' : 'badge-warning';
                 
-                html += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${sale.product} x${sale.quantity}</div>
-                            <div class="item-detail">${formatDate(sale.date)}</div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(debtAmount)}
-                            <span class="badge ${badgeClass}">${sale.payment}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            
+                const quantityDisplay = parseFloat(sale.quantity).toFixed(2);
+        
+        html += `
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${sale.product} x${quantityDisplay}</div>
+            <div class="item-detail">${formatDate(sale.date)}</div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(debtAmount)}
+            <span class="badge ${badgeClass}">${sale.payment}</span>
+        </div>
+    </div>
+`;
+    });            
             html += `
                 <div class="list-item" style="border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
                     <div class="item-info">
@@ -2351,10 +2352,12 @@ updateDashboard();
                     badgeClass = 'badge-warning';
                 }
                 
-                html += `
+               const quantityDisplay = parseFloat(sale.quantity).toFixed(2);
+        
+        html += `
     <div class="list-item">
         <div class="item-info">
-            <div class="item-name">${sale.product} x${sale.quantity}斤</div>
+            <div class="item-name">${sale.product} x${quantityDisplay}斤</div>
             <div class="item-detail">${formatDate(sale.date)}</div>
         </div>
         <div class="item-value">
@@ -2362,7 +2365,8 @@ updateDashboard();
             <span class="badge ${badgeClass}">${sale.payment}</span>
         </div>
     </div>
-`;            });
+`;
+    });
             
             html += '</div>';
             container.innerHTML = html;
@@ -2529,19 +2533,21 @@ function updateCustomerList() {
                     progressClass = 'progress-yellow';
                 }
                 
-                // 低库存标记
                 const lowStockLabel = item.stock <= appData.settings.lowStockThreshold ? 
-                    '<span class="low-stock">库存不足</span>' : '';
-                
-                // 计算毛利率
-                const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
-                
-                html += `
+            '<span class="low-stock">库存不足</span>' : '';
+        
+        // 计算毛利率
+        const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
+        
+        // 显示小数点后两位
+        const stockDisplay = parseFloat(item.stock).toFixed(2);
+        
+        html += `
     <div class="list-item">
         <div class="item-info">
             <div class="item-name">${item.product} ${lowStockLabel}</div>
             <div class="item-detail">成本: ${formatCurrency(item.cost)}/斤 · 毛利: ${marginPercent}%</div>
-            <div class="item-detail">库存: ${item.stock}斤</div>
+            <div class="item-detail">库存: ${stockDisplay}斤</div>
             <div class="progress-bar">
                 <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
             </div>
@@ -2554,8 +2560,8 @@ function updateCustomerList() {
             </div>
         </div>
     </div>
-`;            });
-            
+    `;
+    });            
             container.innerHTML = html;
             
             // 更新分页控件
@@ -2706,22 +2712,25 @@ setInterval(() => {
             // 生成交易记录列表HTML
             let html = '';
             
-            pageItems.forEach(transaction => {
-                if(transaction.type === 'sale') {
-                    // 销售记录
-                    const amount = transaction.price * transaction.quantity;
-                    
-                    let badgeClass = 'badge-success';
-                    if(transaction.payment === '未结账') {
-                        badgeClass = 'badge-danger';
-                    } else if(transaction.payment === '部分结账') {
-                        badgeClass = 'badge-warning';
-                    }
-                    
-                    html += `
+           pageItems.forEach(transaction => {
+        if(transaction.type === 'sale') {
+            // 销售记录
+            const amount = transaction.price * transaction.quantity;
+            
+            let badgeClass = 'badge-success';
+            if(transaction.payment === '未结账') {
+                badgeClass = 'badge-danger';
+            } else if(transaction.payment === '部分结账') {
+                badgeClass = 'badge-warning';
+            }
+            
+            // 显示小数点后两位
+            const quantityDisplay = parseFloat(transaction.quantity).toFixed(2);
+            
+            html += `
     <div class="list-item">
         <div class="item-info">
-            <div class="item-name">销售: ${transaction.product} x${transaction.quantity}斤</div>
+            <div class="item-name">销售: ${transaction.product} x${quantityDisplay}斤</div>
             <div class="item-detail">
                 客户: ${transaction.customer} · ${formatDate(transaction.date)}
                 ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
@@ -2733,14 +2742,17 @@ setInterval(() => {
         </div>
     </div>
 `;
-                } else if(transaction.type === 'purchase') {
-                    // 进货记录
-                    const amount = transaction.price * transaction.quantity;
-                    
-                 html += `
+        } else if(transaction.type === 'purchase') {
+            // 进货记录
+            const amount = transaction.price * transaction.quantity;
+            
+            // 显示小数点后两位
+            const quantityDisplay = parseFloat(transaction.quantity).toFixed(2);
+            
+            html += `
     <div class="list-item">
         <div class="item-info">
-            <div class="item-name">进货: ${transaction.product} x${transaction.quantity}斤</div>
+            <div class="item-name">进货: ${transaction.product} x${quantityDisplay}斤</div>
             <div class="item-detail">
                 供应商: ${transaction.supplier || '未指定'} · ${formatDate(transaction.date)}
                 ${transaction.notes ? ` · 备注: ${transaction.notes}` : ''}
@@ -2750,8 +2762,7 @@ setInterval(() => {
             ${formatCurrency(amount)}
             <span class="badge badge-info">进货</span>
         </div>
-    </div>
-`;                   } else if(transaction.type === 'payment') {
+    </div> `;                   } else if(transaction.type === 'payment') {
                     // 结账记录
                     html += `
                         <div class="list-item">
@@ -2803,18 +2814,16 @@ const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
                 option.value = item.product;
                 productDatalist.appendChild(option);
                 
-                // 添加到select，并标注库存
-                const selectOption = document.createElement('option');
-                selectOption.value = item.product;
-                selectOption.textContent = `${item.product} (库存: ${item.stock}斤)`;
-                
-                // 如果库存低，添加警告
-                if(item.stock <= appData.settings.lowStockThreshold) {
-                    selectOption.textContent += ' ⚠️';
-                }
-                
-                saleProductSelect.appendChild(selectOption);
-            });
+                 const selectOption = document.createElement('option');
+    selectOption.value = item.product;
+    selectOption.textContent = `${item.product} (库存: ${parseFloat(item.stock).toFixed(2)}斤)`;
+    
+    // 如果库存低，添加警告
+    if(item.stock <= appData.settings.lowStockThreshold) {
+        selectOption.textContent += ' ⚠️';
+    }
+    
+    saleProductSelect.appendChild(selectOption);           });
             
             // 恢复选中值
             if(currentValue) {
@@ -2942,20 +2951,21 @@ const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
                 
                 let badgeClass = sale.payment === '未结账' ? 'badge-danger' : 'badge-warning';
                 
-                html += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-name">${sale.product} x${sale.quantity}</div>
-                            <div class="item-detail">${formatDate(sale.date)}</div>
-                        </div>
-                        <div class="item-value">
-                            ${formatCurrency(debtAmount)}
-                            <span class="badge ${badgeClass}">${sale.payment}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            
+            const quantityDisplay = parseFloat(sale.quantity).toFixed(2);
+        
+        html += `
+    <div class="list-item">
+        <div class="item-info">
+            <div class="item-name">${sale.product} x${quantityDisplay}</div>
+            <div class="item-detail">${formatDate(sale.date)}</div>
+        </div>
+        <div class="item-value">
+            ${formatCurrency(debtAmount)}
+            <span class="badge ${badgeClass}">${sale.payment}</span>
+        </div>
+    </div>
+`;
+    });                
             container.innerHTML = html;
         }
         
@@ -3015,19 +3025,18 @@ const unpaidSales = appData.sales.filter(sale =>
     sale.customer === selectedCustomer && sale.payment !== '已结清'
 ).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
-    const sale = unpaidSales[i];
-    const saleAmount = sale.price * sale.quantity;
-    let debtAmount = 0;
-    
-    if(sale.payment === '未结账') {
-        debtAmount = saleAmount;
-    } else if(sale.payment === '部分结账') {
-        // 计算实际欠款金额
-        const paidAmount = sale.partialAmount || (saleAmount * 0.5);
-        debtAmount = saleAmount - paidAmount;
-    }
-    
+    for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
+        const sale = unpaidSales[i];
+        const saleAmount = parseFloat((sale.price * sale.quantity).toFixed(2));
+        let debtAmount = 0;
+        
+        if(sale.payment === '未结账') {
+            debtAmount = saleAmount;
+        } else if(sale.payment === '部分结账') {
+            // 计算实际欠款金额
+            const paidAmount = sale.partialAmount || parseFloat((saleAmount * 0.5).toFixed(2));
+            debtAmount = parseFloat((saleAmount - paidAmount).toFixed(2));
+        }
     const saleIndex = appData.sales.findIndex(s => 
         s.customer === sale.customer && 
         s.product === sale.product && 
@@ -3081,8 +3090,7 @@ for(let i = 0; i < unpaidSales.length && remainingAmount > 0; i++) {
             showScreen('home-screen');
 setTimeout(updateDashboard, 100);
         }
-        // 修改calculateCustomerDebt函数
-function calculateCustomerDebt() {
+        function calculateCustomerDebt() {
     const customerDebt = {};
     
     // 初始化客户欠款为0
@@ -3093,22 +3101,23 @@ function calculateCustomerDebt() {
     // 累加未结清销售金额
     appData.sales.forEach(sale => {
         if(sale.payment !== '已结清') {
-            const totalAmount = sale.price * sale.quantity;
+            const totalAmount = parseFloat((sale.price * sale.quantity).toFixed(2));
             
             if(sale.payment === '未结账') {
-                customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + totalAmount;
+                customerDebt[sale.customer] = parseFloat((customerDebt[sale.customer] || 0) + totalAmount).toFixed(2);
+                customerDebt[sale.customer] = parseFloat(customerDebt[sale.customer]);
             } else if(sale.payment === '部分结账') {
                 // 使用实际已结金额计算欠款
-                const paidAmount = sale.partialAmount || (totalAmount * 0.5); // 如果没有partialAmount字段，使用默认的50%
-                const debtAmount = totalAmount - paidAmount;
-                customerDebt[sale.customer] = (customerDebt[sale.customer] || 0) + debtAmount;
+                const paidAmount = sale.partialAmount || parseFloat((totalAmount * 0.5).toFixed(2)); // 如果没有partialAmount字段，使用默认的50%
+                const debtAmount = parseFloat((totalAmount - paidAmount).toFixed(2));
+                customerDebt[sale.customer] = parseFloat((customerDebt[sale.customer] || 0) + debtAmount).toFixed(2);
+                customerDebt[sale.customer] = parseFloat(customerDebt[sale.customer]);
             }
         }
     });
     
     return customerDebt;
-}
-                // 生成分页控件
+}                // 生成分页控件
         function updatePagination(container, totalPages, currentPage, callback) {
             if(totalPages <= 1) {
                 container.innerHTML = '';
@@ -3171,24 +3180,24 @@ function calculateCustomerDebt() {
                 toast.error('找不到商品!');
                 return;
             }
-            
-             const html = `
+            const html = `
     <div class="form-group">
         <label class="form-label">商品名称</label>
         <input type="text" class="form-control" id="edit-product-name" value="${item.product}" readonly>
     </div>
     <div class="form-group">
     <label class="form-label">当前库存(斤)</label>
-    <input type="number" step="0.01" class="form-control" id="edit-product-stock" value="${item.stock}">
+    <input type="number" step="0.01" class="form-control" id="edit-product-stock" value="${parseFloat(item.stock).toFixed(2)}">
 </div>
     <div class="form-group">
         <label class="form-label">成本价(元/斤)</label>
-        <input type="number" step="0.1" class="form-control" id="edit-product-cost" value="${item.cost}">
+        <input type="number" step="0.01" class="form-control" id="edit-product-cost" value="${parseFloat(item.cost).toFixed(2)}">
     </div>
     <div class="form-group">
         <label class="form-label">销售价(元/斤)</label>
-        <input type="number" step="0.1" class="form-control" id="edit-product-price" value="${item.price}">
+        <input type="number" step="0.01" class="form-control" id="edit-product-price" value="${parseFloat(item.price).toFixed(2)}">
     </div>
+             
 `;          
             // 创建模态框
             const modal = document.createElement('div');
@@ -3213,37 +3222,36 @@ function calculateCustomerDebt() {
             document.getElementById('edit-cancel').addEventListener('click', () => {
                 document.body.removeChild(modal);
             });
-            
             document.getElementById('edit-save').addEventListener('click', () => {
-                const newStock = parseInt(document.getElementById('edit-product-stock').value);
-                const newCost = parseFloat(document.getElementById('edit-product-cost').value);
-                const newPrice = parseFloat(document.getElementById('edit-product-price').value);
-                
-                // 验证输入
-                if(isNaN(newStock) || newStock < 0 || isNaN(newCost) || newCost <= 0 || isNaN(newPrice) || newPrice <= 0) {
-                    toast.error('请输入有效的数值!');
-                    return;
-                }
-                
-                // 更新商品信息
-                item.stock = newStock;
-                item.cost = newCost;
-                item.price = newPrice;
-                
-                // 保存数据
-                saveAppData();
-                
-                // 更新界面
-                updateInventoryList();
-                
-                // 显示成功消息
-                toast.success('商品信息更新成功!');
-                
-                // 关闭模态框
-                document.body.removeChild(modal);
-            });
+        const newStock = parseFloat(document.getElementById('edit-product-stock').value);
+        const newCost = parseFloat(document.getElementById('edit-product-cost').value);
+        const newPrice = parseFloat(document.getElementById('edit-product-price').value);
+        
+        // 验证输入
+        if(isNaN(newStock) || newStock < 0 || isNaN(newCost) || newCost <= 0 || isNaN(newPrice) || newPrice <= 0) {
+            toast.error('请输入有效的数值!');
+            return;
         }
         
+        // 更新商品信息
+        item.stock = parseFloat(newStock.toFixed(2));
+        item.cost = parseFloat(newCost.toFixed(2));
+        item.price = parseFloat(newPrice.toFixed(2));
+        
+        // 保存数据
+        saveAppData();
+        
+        // 更新界面
+        updateInventoryList();
+        
+        // 显示成功消息
+        toast.success('商品信息更新成功!');
+        
+        // 关闭模态框
+        document.body.removeChild(modal);
+    });
+}
+                    
         // 快速补货
         function quickAddStock(productName) {
             const item = appData.inventory.find(item => item.product === productName);
@@ -3259,15 +3267,15 @@ function calculateCustomerDebt() {
     </div>
     <div class="form-group">
         <label class="form-label">当前库存(斤)</label>
-        <input type="text" class="form-control" value="${item.stock}" readonly>
+        <input type="text" class="form-control" value="${parseFloat(item.stock).toFixed(2)}" readonly>
     </div>
     <div class="form-group">
     <label class="form-label">补货数量(斤)</label>
-    <input type="number" step="0.1" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
+    <input type="number" step="0.01" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
 </div>
     <div class="form-group">
         <label class="form-label">进货单价(元/斤)</label>
-        <input type="number" step="0.1" class="form-control" id="add-stock-cost" value="${item.cost}" placeholder="输入进货单价">
+        <input type="number" step="0.01" class="form-control" id="add-stock-cost" value="${parseFloat(item.cost).toFixed(2)}" placeholder="输入进货单价">
     </div>
     <div class="form-group">
         <label class="form-label">供应商</label>
@@ -3299,16 +3307,17 @@ function calculateCustomerDebt() {
                 document.body.removeChild(modal);
             });
             
-            document.getElementById('add-stock-save').addEventListener('click', () => {
-                const quantity = parseInt(document.getElementById('add-stock-quantity').value);
-                const cost = parseFloat(document.getElementById('add-stock-cost').value);
-                const supplier = document.getElementById('add-stock-supplier').value.trim();
+               document.getElementById('add-stock-save').addEventListener('click', () => {
+        const quantity = parseFloat(document.getElementById('add-stock-quantity').value);
+        const cost = parseFloat(document.getElementById('add-stock-cost').value);
+        const supplier = document.getElementById('add-stock-supplier').value.trim();
+        
+        // 验证输入
+        if(isNaN(quantity) || quantity <= 0 || isNaN(cost) || cost <= 0) {
+            toast.error('请输入有效的数量和单价!');
+            return;
+        }             
                 
-                // 验证输入
-                if(isNaN(quantity) || quantity <= 0 || isNaN(cost) || cost <= 0) {
-                    toast.error('请输入有效的数量和单价!');
-                    return;
-                }
                 
                 // 创建进货记录
                 const purchase = {
@@ -3325,19 +3334,17 @@ function calculateCustomerDebt() {
                 if(supplier && !appData.suppliers.includes(supplier)) {
                     appData.suppliers.push(supplier);
                 }
-                
-                // 更新库存
-                const oldStock = item.stock;
-                const oldCost = item.cost;
-                const newStock = oldStock + quantity;
-                
-                // 计算加权平均成本
-                const totalCost = oldStock * oldCost + quantity * cost;
-                const weightedCost = totalCost / newStock;
-                
-                item.stock = newStock;
-                item.cost = Math.round(weightedCost * 10) / 10;
-                
+                const oldStock = parseFloat(item.stock);
+        const oldCost = parseFloat(item.cost);
+        const newStock = parseFloat((oldStock + quantity).toFixed(2));
+        
+        // 计算加权平均成本
+        const totalCost = oldStock * oldCost + quantity * cost;
+        const weightedCost = totalCost / newStock;
+        
+        item.stock = newStock;
+        item.cost = parseFloat(weightedCost.toFixed(2));
+                                
                 // 添加到进货记录
                 appData.purchases.push(purchase);
                 
@@ -3717,27 +3724,26 @@ function calculateCustomerDebt() {
                 }
             }
             
-            // 计算每个日期的销售额
-            appData.sales.forEach(sale => {
-                const saleDate = new Date(sale.date);
-                if(saleDate >= startDate && saleDate <= endDate) {
-                    const amount = sale.price * sale.quantity;
-                    
-                    let index = -1;
-                    if(dateFormat === 'day') {
-                        const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
-                        index = labels.indexOf(dateStr);
-                    } else if(dateFormat === 'month') {
-                        const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
-                        index = labels.indexOf(monthName);
-                    }
-                    
-                    if(index !== -1) {
-                        salesData[index] += amount;
-                    }
-                }
-            });
-            
+          // 计算每个日期的销售额
+appData.sales.forEach(sale => {
+    const saleDate = new Date(sale.date);
+    if(saleDate >= startDate && saleDate <= endDate) {
+        const amount = parseFloat((sale.price * parseFloat(sale.quantity)).toFixed(2));
+        
+        let index = -1;
+        if(dateFormat === 'day') {
+            const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
+            index = labels.indexOf(dateStr);
+        } else if(dateFormat === 'month') {
+            const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
+            index = labels.indexOf(monthName);
+        }
+        
+        if(index !== -1) {
+            salesData[index] = parseFloat((salesData[index] + amount).toFixed(2));
+        }
+    }
+});             
             // 计算汇总信息
             const totalSales = salesData.reduce((sum, amount) => sum + amount, 0);
             const avgSales = totalSales / salesData.filter(amount => amount > 0).length;
@@ -3802,33 +3808,33 @@ function calculateCustomerDebt() {
                 }
             }
             
-            // 计算每个日期的利润
-            appData.sales.forEach(sale => {
-                const saleDate = new Date(sale.date);
-                if(saleDate >= startDate && saleDate <= endDate) {
-                    // 找到商品成本
-                    const inventoryItem = appData.inventory.find(item => item.product === sale.product);
-                    if(inventoryItem) {
-                        const saleAmount = sale.price * sale.quantity;
-                        const costAmount = inventoryItem.cost * sale.quantity;
-                        const profit = saleAmount - costAmount;
-                        
-                        let index = -1;
-                        if(dateFormat === 'day') {
-                            const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
-                            index = labels.indexOf(dateStr);
-                        } else if(dateFormat === 'month') {
-                            const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
-                            index = labels.indexOf(monthName);
-                        }
-                        
-                        if(index !== -1) {
-                            profitData[index] += profit;
-                        }
-                    }
-                }
-            });
+           // 计算每个日期的利润
+appData.sales.forEach(sale => {
+    const saleDate = new Date(sale.date);
+    if(saleDate >= startDate && saleDate <= endDate) {
+        // 找到商品成本
+        const inventoryItem = appData.inventory.find(item => item.product === sale.product);
+        if(inventoryItem) {
+            const quantity = parseFloat(sale.quantity);
+            const saleAmount = parseFloat((sale.price * quantity).toFixed(2));
+            const costAmount = parseFloat((inventoryItem.cost * quantity).toFixed(2));
+            const profit = parseFloat((saleAmount - costAmount).toFixed(2));
             
+            let index = -1;
+            if(dateFormat === 'day') {
+                const dateStr = formatDate(saleDate).slice(5); // 只显示月-日
+                index = labels.indexOf(dateStr);
+            } else if(dateFormat === 'month') {
+                const monthName = saleDate.toLocaleString('zh-CN', { month: 'short' });
+                index = labels.indexOf(monthName);
+            }
+            
+            if(index !== -1) {
+                profitData[index] = parseFloat((profitData[index] + profit).toFixed(2));
+            }
+        }
+    }
+});             
             // 计算汇总信息
             const totalProfit = profitData.reduce((sum, amount) => sum + amount, 0);
             const avgProfit = totalProfit / profitData.filter(amount => amount > 0).length;
@@ -3875,15 +3881,14 @@ function calculateCustomerDebt() {
             const productSales = {};
             
             appData.sales.forEach(sale => {
-                const saleDate = new Date(sale.date);
-                if(saleDate >= startDate && saleDate <= endDate) {
-                    if(!productSales[sale.product]) {
-                        productSales[sale.product] = 0;
-                    }
-                    productSales[sale.product] += sale.quantity;
-                }
-            });
-            
+        const saleDate = new Date(sale.date);
+        if(saleDate >= startDate && saleDate <= endDate) {
+            if(!productSales[sale.product]) {
+                productSales[sale.product] = 0;
+            }
+            productSales[sale.product] = parseFloat((productSales[sale.product] + parseFloat(sale.quantity)).toFixed(2));
+        }
+    });            
             // 转换为数组并排序，取前10个
             const sortedProducts = Object.entries(productSales)
                 .sort((a, b) => b[1] - a[1])
@@ -4063,18 +4068,22 @@ function calculateCustomerDebt() {
                 const inventoryItem = appData.inventory.find(item => item.product === name);
                 const stock = inventoryItem ? inventoryItem.stock : 0;
                 
-                html += `
-    <div class="list-item">
-        <div class="item-info">
-            <div class="item-name">${rankIcon} ${name}</div>
-            <div class="item-detail">本月销量: ${quantity}斤 · 占比: ${percentage}%</div>
-            <div class="item-detail">剩余库存: ${stock}斤</div>
-        </div>
-        <div class="item-value">
-            ${quantity}斤
-        </div>
+             // 显示小数点后两位
+const quantityDisplay = parseFloat(quantity).toFixed(2);
+const stockDisplay = parseFloat(stock).toFixed(2);
+
+html += `
+<div class="list-item">
+    <div class="item-info">
+        <div class="item-name">${rankIcon} ${name}</div>
+        <div class="item-detail">本月销量: ${quantityDisplay}斤 · 占比: ${percentage}%</div>
+        <div class="item-detail">剩余库存: ${stockDisplay}斤</div>
     </div>
-`;            });
+    <div class="item-value">
+        ${quantityDisplay}斤
+    </div>
+</div>
+`;               });
             
             html += '</div>';
             container.innerHTML = html;
@@ -4225,14 +4234,14 @@ function calculateCustomerDebt() {
                 item.stock <= appData.settings.lowStockThreshold
             );
             
-            if(lowStockItems.length > 0) {
-                if(lowStockItems.length === 1) {
-                    toast.warning(`商品"${lowStockItems[0].product}"库存不足，仅剩${lowStockItems[0].stock}斤。`);
-                } else {
-                    toast.warning(`有${lowStockItems.length}种商品库存不足，请尽快补货。`);
-                }
-            }
-        }
+           if(lowStockItems.length > 0) {
+    if(lowStockItems.length === 1) {
+        const stockDisplay = parseFloat(lowStockItems[0].stock).toFixed(2);
+        toast.warning(`商品"${lowStockItems[0].product}"库存不足，仅剩${stockDisplay}斤。`);
+    } else {
+        toast.warning(`有${lowStockItems.length}种商品库存不足，请尽快补货。`);
+    }
+}         }
         
        // 检查未结账欠款
         function checkUnpaidDebt() {
@@ -4330,19 +4339,18 @@ function exportData() {
         appData.sales.forEach(sale => {
             const totalAmount = sale.price * sale.quantity;
             
-            // CSV每一行的数据
-            const row = [
-                sale.date,
-                escapeCsvField(sale.customer),
-                escapeCsvField(sale.product),
-                sale.quantity,
-                sale.price.toFixed(2),
-                totalAmount.toFixed(2),
-                escapeCsvField(sale.payment),
-                escapeCsvField(sale.paymentMethod || ''),
-                escapeCsvField(sale.notes || '')
-            ];
-            
+           // CSV每一行的数据
+const row = [
+    sale.date,
+    escapeCsvField(sale.customer),
+    escapeCsvField(sale.product),
+    parseFloat(sale.quantity).toFixed(2),
+    sale.price.toFixed(2),
+    totalAmount.toFixed(2),
+    escapeCsvField(sale.payment),
+    escapeCsvField(sale.paymentMethod || ''),
+    escapeCsvField(sale.notes || '')
+];             
             csvContent += row.join(',') + '\n';
         });
         
@@ -4362,14 +4370,13 @@ function exportData() {
             const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
             
             // CSV每一行的数据
-            const row = [
-                escapeCsvField(item.product),
-                item.stock,
-                item.cost.toFixed(2),
-                item.price.toFixed(2),
-                marginPercent + '%'
-            ];
-            
+const row = [
+    escapeCsvField(item.product),
+    parseFloat(item.stock).toFixed(2),
+    item.cost.toFixed(2),
+    item.price.toFixed(2),
+    marginPercent + '%'
+];            
             csvContent += row.join(',') + '\n';
         });
         
