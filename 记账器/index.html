@@ -4276,33 +4276,187 @@ function calculateCustomerDebt() {
         }
 
         // 导出数据
-        function exportData() {
-            // 获取当前日期作为文件名一部分
-            const today = new Date().toISOString().slice(0, 10);
-            const fileName = `禽易记数据备份_${today}.json`;
+function exportData() {
+    // 创建选择格式的模态框
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.style.display = 'flex';
+    
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-title">选择导出格式</div>
+            <div class="modal-content">
+                <div class="form-group">
+                    <button class="btn btn-primary" id="export-json" style="margin-bottom: 10px; width: 100%;">JSON格式 (完整备份)</button>
+                    <small style="display: block; margin-bottom: 15px; color: #666;">包含所有数据，可用于完整恢复</small>
+                    
+                    <button class="btn btn-primary" id="export-sales-csv" style="margin-bottom: 10px; width: 100%;">销售记录 (CSV表格)</button>
+                    <small style="display: block; margin-bottom: 15px; color: #666;">导出销售记录为Excel可读的CSV表格</small>
+                    
+                    <button class="btn btn-primary" id="export-inventory-csv" style="margin-bottom: 10px; width: 100%;">库存数据 (CSV表格)</button>
+                    <small style="display: block; margin-bottom: 15px; color: #666;">导出库存数据为Excel可读的CSV表格</small>
+                    
+                    <button class="btn btn-primary" id="export-customers-csv" style="width: 100%;">客户信息 (CSV表格)</button>
+                    <small style="display: block; margin-bottom: 5px; color: #666;">导出客户信息为Excel可读的CSV表格</small>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary btn-sm" id="export-cancel">取消</button>
+            </div>
+        </div>
+    `;
+    
+    // 添加到文档
+    document.body.appendChild(modal);
+    
+    // 获取当前日期作为文件名一部分
+    const today = new Date().toISOString().slice(0, 10);
+    
+    // 绑定JSON导出按钮事件
+    document.getElementById('export-json').addEventListener('click', () => {
+        const fileName = `禽易记数据备份_${today}.json`;
+        const dataString = localStorage.getItem('poultryData');
+        
+        // 创建下载链接
+        downloadFile(fileName, dataString, 'application/json');
+        document.body.removeChild(modal);
+        toast.success('JSON数据导出成功!');
+    });
+    
+    // 绑定销售CSV导出按钮事件
+    document.getElementById('export-sales-csv').addEventListener('click', () => {
+        const fileName = `禽易记销售记录_${today}.csv`;
+        
+        // 准备CSV数据
+        let csvContent = '\ufeff日期,客户,商品,数量,单价,总金额,付款状态,付款方式,备注\n';
+        
+        appData.sales.forEach(sale => {
+            const totalAmount = sale.price * sale.quantity;
             
-            // 获取数据
-            const dataString = localStorage.getItem('poultryData');
+            // CSV每一行的数据
+            const row = [
+                sale.date,
+                escapeCsvField(sale.customer),
+                escapeCsvField(sale.product),
+                sale.quantity,
+                sale.price.toFixed(2),
+                totalAmount.toFixed(2),
+                escapeCsvField(sale.payment),
+                escapeCsvField(sale.paymentMethod || ''),
+                escapeCsvField(sale.notes || '')
+            ];
             
-            // 创建下载链接
-            const blob = new Blob([dataString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
+            csvContent += row.join(',') + '\n';
+        });
+        
+        // 下载CSV
+        downloadFile(fileName, csvContent, 'text/csv;charset=utf-8');
+        document.body.removeChild(modal);
+        toast.success('销售记录CSV导出成功!');
+    });
+    
+    // 绑定库存CSV导出按钮事件
+    document.getElementById('export-inventory-csv').addEventListener('click', () => {
+        const fileName = `禽易记库存数据_${today}.csv`;
+        
+        // 准备CSV数据
+        let csvContent = '\ufeff商品名称,当前库存,成本价,销售价,毛利率\n';
+        
+        appData.inventory.forEach(item => {
+            const marginPercent = ((item.price - item.cost) / item.price * 100).toFixed(1);
             
-            // 触发下载
-            document.body.appendChild(a);
-            a.click();
+            // CSV每一行的数据
+            const row = [
+                escapeCsvField(item.product),
+                item.stock,
+                item.cost.toFixed(2),
+                item.price.toFixed(2),
+                marginPercent + '%'
+            ];
             
-            // 清理
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 0);
+            csvContent += row.join(',') + '\n';
+        });
+        
+        // 下载CSV
+        downloadFile(fileName, csvContent, 'text/csv;charset=utf-8');
+        document.body.removeChild(modal);
+        toast.success('库存数据CSV导出成功!');
+    });
+    
+    // 绑定客户CSV导出按钮事件
+    document.getElementById('export-customers-csv').addEventListener('click', () => {
+        const fileName = `禽易记客户信息_${today}.csv`;
+        
+        // 计算客户欠款
+        const customerDebt = calculateCustomerDebt();
+        
+        // 准备CSV数据
+        let csvContent = '\ufeff客户名称,联系人,联系电话,地址,未结账款,备注\n';
+        
+        appData.customers.forEach(customer => {
+            const debt = customerDebt[customer.name] || 0;
             
-            toast.success('数据导出成功!');
-        }
+            // CSV每一行的数据
+            const row = [
+                escapeCsvField(customer.name),
+                escapeCsvField(customer.contact || ''),
+                escapeCsvField(customer.phone || ''),
+                escapeCsvField(customer.address || ''),
+                debt.toFixed(2),
+                escapeCsvField(customer.notes || '')
+            ];
+            
+            csvContent += row.join(',') + '\n';
+        });
+        
+        // 下载CSV
+        downloadFile(fileName, csvContent, 'text/csv;charset=utf-8');
+        document.body.removeChild(modal);
+        toast.success('客户信息CSV导出成功!');
+    });
+    
+    // 绑定取消按钮事件
+    document.getElementById('export-cancel').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+// 转义CSV字段中的特殊字符
+function escapeCsvField(field) {
+    if (field === null || field === undefined) return '';
+    
+    // 将字段转换为字符串
+    let str = String(field);
+    
+    // 如果字段包含逗号、双引号或换行符，需要用双引号包裹
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        // 将字段中的双引号替换为两个双引号
+        str = str.replace(/"/g, '""');
+        // 用双引号包裹整个字段
+        str = `"${str}"`;
+    }
+    
+    return str;
+}
+
+// 下载文件通用函数
+function downloadFile(fileName, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    
+    // 触发下载
+    document.body.appendChild(a);
+    a.click();
+    
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
+}
         
         // 导入数据
         function importData(event) {
