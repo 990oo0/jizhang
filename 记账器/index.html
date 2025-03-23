@@ -718,13 +718,17 @@
                         </datalist>
                     </div>
                     <div class="form-group">
-    <label class="form-label">进货数量(斤)</label>
-    <input type="number" step="0.01" class="form-control" id="purchase-quantity" placeholder="输入数量">
-</div>
-<div class="form-group">
-    <label class="form-label">进货单价(元/斤)</label>
-    <input type="number" step="0.01" class="form-control" id="purchase-price" placeholder="输入单价">
-</div>
+                        <label class="form-label">进货数量(斤)</label>
+                        <input type="number" step="0.01" class="form-control" id="purchase-quantity" placeholder="输入重量(斤)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">家禽数量(个)</label>
+                        <input type="number" step="1" class="form-control" id="purchase-count" placeholder="输入数量(个)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">进货单价(元/斤)</label>
+                        <input type="number" step="0.01" class="form-control" id="purchase-price" placeholder="输入单价">
+                    </div>
                     <div class="form-group">
                         <label class="form-label">供应商</label>
                         <input type="text" class="form-control" id="purchase-supplier" placeholder="输入供应商名称" list="supplier-list">
@@ -770,6 +774,10 @@
                      <div class="form-group">
     <label class="form-label">销售数量(斤)</label>
     <input type="number" step="0.01" class="form-control" id="sale-quantity" placeholder="输入数量" onchange="updateTotalPrice()">
+</div>
+<div class="form-group">
+    <label class="form-label">家禽数量(个)</label>
+    <input type="number" step="1" class="form-control" id="sale-count" placeholder="输入家禽数量">
 </div>
 <div class="form-group">
     <label class="form-label">销售单价(元/斤)</label>
@@ -1307,46 +1315,55 @@ function setupPartialPayment() {
             return phone.slice(0, 3) + '****' + phone.slice(-4);
         }
 
-        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-        });
-
+    try {
+        initializeApp();
+        setupEventListeners();
+        
+        // 特别检查客户搜索功能
+        setupCustomerSearchListener();
+    } catch (error) {
+        console.error("初始化应用时发生错误:", error);
+    }
+});
         // 应用初始化
-        function initializeApp() {
-            // 设置默认日期为今天
-            const today = new Date().toISOString().split('T')[0];
-            
-            const dateInputs = document.querySelectorAll('input[type="date"]');
-            dateInputs.forEach(input => {
-                input.value = today;
-            });
-            
-            // 初始化本地存储
-            initializeLocalStorage();
-            
-            // 加载数据
-            loadAppData();
-            
-            // 初始显示
-            updateDashboard();
-            updateCustomerList();
-            updatePaymentCustomerList();
-            
-            // 绑定销售表单中的支付方式显示逻辑
-            document.getElementById('sale-payment').addEventListener('change', function() {
-                const paymentMethodGroup = document.getElementById('payment-method-group');
-                paymentMethodGroup.style.display = this.value === '已结清' ? 'block' : 'none';
-            });
-            setupPartialPayment();
-            // 初始化图表
-            initSalesChart();
-            
-            // 检查低库存和欠款提醒
-            checkLowStockItems();
-            checkUnpaidDebt();
-        }
+function initializeApp() {
+    // 设置默认日期为今天
+    const today = new Date().toISOString().split('T')[0];
+    
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        input.value = today;
+    });
+    
+    // 初始化本地存储
+    initializeLocalStorage();
+    
+    // 加载数据
+    loadAppData();
+    
+    // 初始显示
+    updateDashboard();
+    updateCustomerList();
+    updatePaymentCustomerList();
+    
+    // 绑定销售表单中的支付方式显示逻辑
+    document.getElementById('sale-payment').addEventListener('change', function() {
+        const paymentMethodGroup = document.getElementById('payment-method-group');
+        paymentMethodGroup.style.display = this.value === '已结清' ? 'block' : 'none';
+    });
+    setupPartialPayment();
+    
+    // 确保客户搜索功能正常工作
+    setupCustomerSearchListener();
+    
+    // 初始化图表
+    initSalesChart();
+    
+    // 检查低库存和欠款提醒
+    checkLowStockItems();
+    checkUnpaidDebt();
+}
 
               // 找到setupEventListeners函数，添加或修改下面的代码
 function setupEventListeners() {
@@ -1357,12 +1374,12 @@ function setupEventListeners() {
         updateInventoryList();
     });
     
-    // 客户搜索 - 确保这段代码存在并正确
-    document.getElementById('customer-search').addEventListener('input', function() {
+    // 客户搜索 - 注释掉这段代码，由setupCustomerSearchFix函数处理
+    /* document.getElementById('customer-search').addEventListener('input', function() {
         currentState.customerFilter = this.value.trim().toLowerCase();
         currentState.customerPage = 1;
         updateCustomerList();
-    });
+    }); */
     
     // 搜索按钮点击事件 - 新增这段代码
     document.getElementById('header-search-btn').addEventListener('click', function() {
@@ -1510,52 +1527,160 @@ function setupEventListeners() {
             document.getElementById('debt-reminder-days-group').style.display = 
                 document.getElementById('setting-debt-reminder').checked ? 'block' : 'none';
         }
-
-        // 初始化本地存储
-        function initializeLocalStorage() {
-            if(!localStorage.getItem('poultryData')) {
-                localStorage.setItem('poultryData', JSON.stringify(appData));
+// 确保客户搜索事件监听器正确设置
+function setupCustomerSearchListener() {
+    const searchInput = document.getElementById('customer-search');
+    if (searchInput) {
+        // 移除可能存在的旧事件监听器，避免重复
+        const newSearchInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+        
+        // 添加新的事件监听器
+        newSearchInput.addEventListener('input', function() {
+            currentState.customerFilter = this.value.trim().toLowerCase();
+            currentState.customerPage = 1;
+            updateCustomerList();
+        });
+    }
+}
+        // 增强的初始化localStorage函数
+function initializeLocalStorage() {
+    if(!localStorage.getItem('poultryData')) {
+        const defaultData = {
+            purchases: [],
+            sales: [],
+            customers: [],
+            inventory: [],
+            payments: [],
+            suppliers: [],
+            settings: {
+                lowStockAlert: true,
+                lowStockThreshold: 10,
+                debtReminder: true,
+                debtReminderDays: 7
             }
-        }
-
-        // 加载数据
-        function loadAppData() {
-            const data = JSON.parse(localStorage.getItem('poultryData'));
+        };
+        localStorage.setItem('poultryData', JSON.stringify(defaultData));
+    } else {
+        try {
+            // 尝试解析数据以确保其有效
+            const parsedData = JSON.parse(localStorage.getItem('poultryData'));
             
-            // 兼容旧版数据结构
-            appData.purchases = data.purchases || [];
-            appData.sales = data.sales || [];
-            appData.customers = data.customers || [];
-            appData.inventory = data.inventory || [];
-            appData.payments = data.payments || [];
-            appData.suppliers = data.suppliers || [];
+            // 确保所有必需的属性都存在
+            if (!parsedData.customers) parsedData.customers = [];
+            if (!parsedData.sales) parsedData.sales = [];
+            if (!parsedData.purchases) parsedData.purchases = [];
+            if (!parsedData.inventory) parsedData.inventory = [];
+            if (!parsedData.payments) parsedData.payments = [];
+            if (!parsedData.suppliers) parsedData.suppliers = [];
             
-            // 加载设置
-            if(data.settings) {
-                appData.settings = data.settings;
-                
-                // 更新界面设置
-                document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
-                document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
-                document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
-                document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
+            if (!parsedData.settings) {
+                parsedData.settings = {
+                    lowStockAlert: true,
+                    lowStockThreshold: 10,
+                    debtReminder: true,
+                    debtReminderDays: 7
+                };
             }
+            
+            // 保存修复后的数据
+            localStorage.setItem('poultryData', JSON.stringify(parsedData));
+        } catch (error) {
+            console.error("解析本地存储数据失败:", error);
+            // 重置数据结构
+            const defaultData = {
+                purchases: [],
+                sales: [],
+                customers: [],
+                inventory: [],
+                payments: [],
+                suppliers: [],
+                settings: {
+                    lowStockAlert: true,
+                    lowStockThreshold: 10,
+                    debtReminder: true,
+                    debtReminderDays: 7
+                }
+            };
+            localStorage.setItem('poultryData', JSON.stringify(defaultData));
         }
+    }
+}
 
+        // 增强的加载应用数据函数
+function loadAppData() {
+    try {
+        const dataString = localStorage.getItem('poultryData');
+        if (!dataString) {
+            initializeLocalStorage();
+            loadAppData(); // 递归调用以加载新初始化的数据
+            return;
+        }
+        
+        const data = JSON.parse(dataString);
+        
+        // 兼容旧版数据结构
+        appData.purchases = data.purchases || [];
+        appData.sales = data.sales || [];
+        appData.customers = data.customers || [];
+        appData.inventory = data.inventory || [];
+        appData.payments = data.payments || [];
+        appData.suppliers = data.suppliers || [];
+        
+        // 加载设置
+        if(data.settings) {
+            appData.settings = data.settings;
+            
+            // 更新界面设置
+            const lowStockCheckbox = document.getElementById('setting-low-stock');
+            const lowStockThreshold = document.getElementById('setting-low-stock-threshold');
+            const debtReminderCheckbox = document.getElementById('setting-debt-reminder');
+            const debtReminderDays = document.getElementById('setting-debt-days');
+            
+            if (lowStockCheckbox) lowStockCheckbox.checked = appData.settings.lowStockAlert;
+            if (lowStockThreshold) lowStockThreshold.value = appData.settings.lowStockThreshold;
+            if (debtReminderCheckbox) debtReminderCheckbox.checked = appData.settings.debtReminder;
+            if (debtReminderDays) debtReminderDays.value = appData.settings.debtReminderDays;
+        }
+    } catch (error) {
+        console.error("加载应用数据时发生错误:", error);
+        // 重置数据
+        appData = {
+            purchases: [],
+            sales: [],
+            customers: [],
+            inventory: [],
+            payments: [],
+            suppliers: [],
+            settings: {
+                lowStockAlert: true,
+                lowStockThreshold: 10,
+                debtReminder: true,
+                debtReminderDays: 7
+            }
+        };
+    }
+}
         // 保存数据到本地存储
         function saveAppData() {
             localStorage.setItem('poultryData', JSON.stringify(appData));
         }
 
-        // 切换显示屏幕
-        function showScreen(screenId) {
+        // 增强的屏幕显示函数
+function showScreen(screenId) {
     // 隐藏所有屏幕
     document.querySelectorAll('.screen').forEach(screen => {
         screen.style.display = 'none';
     });
     
     // 显示目标屏幕
-    document.getElementById(screenId).style.display = 'block';
+    const targetScreen = document.getElementById(screenId);
+    if (!targetScreen) {
+        console.error(`目标屏幕 ${screenId} 不存在!`);
+        return;
+    }
+    
+    targetScreen.style.display = 'block';
     
     // 保存当前屏幕ID
     currentState.currentScreen = screenId;
@@ -1565,33 +1690,45 @@ function setupEventListeners() {
     
     // 显示/隐藏返回按钮
     const backBtn = document.getElementById('header-back-btn');
-    backBtn.style.display = screenId === 'home-screen' ? 'none' : 'block';
+    if (backBtn) {
+        backBtn.style.display = screenId === 'home-screen' ? 'none' : 'block';
+    }
     
-    // 根据屏幕ID执行特定逻辑
-    if(screenId === 'home-screen') {
-        updateDashboard();
-    } else if(screenId === 'inventory-screen') {
-        updateInventoryList();
-    } else if(screenId === 'customer-form') {
-        updateCustomerList();
-    } else if(screenId === 'payment-form') {
-        updatePaymentCustomerList();
-        updateUnpaidBillsList();
-    } else if(screenId === 'report-screen') {
-        initReportChart();
-        updateRankList('product');
-        updateDebtStats();
-    } else if(screenId === 'transactions-screen') {
-        updateTransactionsList();
-    } else if(screenId.includes('settings')) {
-        // 加载设置值
-        document.getElementById('setting-low-stock').checked = appData.settings.lowStockAlert;
-        document.getElementById('setting-low-stock-threshold').value = appData.settings.lowStockThreshold;
-        document.getElementById('setting-debt-reminder').checked = appData.settings.debtReminder;
-        document.getElementById('setting-debt-days').value = appData.settings.debtReminderDays;
+    try {
+        // 根据屏幕ID执行特定逻辑
+        if(screenId === 'home-screen') {
+            updateDashboard();
+        } else if(screenId === 'inventory-screen') {
+            updateInventoryList();
+        } else if(screenId === 'customer-form') {
+            // 特别强调客户列表和搜索
+            setupCustomerSearchListener(); // 设置客户搜索监听器
+            updateCustomerList(); // 更新客户列表
+        } else if(screenId === 'payment-form') {
+            updatePaymentCustomerList();
+            updateUnpaidBillsList();
+        } else if(screenId === 'report-screen') {
+            initReportChart();
+            updateRankList('product');
+            updateDebtStats();
+        } else if(screenId === 'transactions-screen') {
+            updateTransactionsList();
+        } else if(screenId.includes('settings')) {
+            // 加载设置值
+            const lowStockCheckbox = document.getElementById('setting-low-stock');
+            const lowStockThreshold = document.getElementById('setting-low-stock-threshold');
+            const debtReminderCheckbox = document.getElementById('setting-debt-reminder');
+            const debtReminderDays = document.getElementById('setting-debt-days');
+            
+            if (lowStockCheckbox) lowStockCheckbox.checked = appData.settings.lowStockAlert;
+            if (lowStockThreshold) lowStockThreshold.value = appData.settings.lowStockThreshold;
+            if (debtReminderCheckbox) debtReminderCheckbox.checked = appData.settings.debtReminder;
+            if (debtReminderDays) debtReminderDays.value = appData.settings.debtReminderDays;
+        }
+    } catch (error) {
+        console.error(`执行屏幕 ${screenId} 特定逻辑时发生错误:`, error);
     }
 }
-
         // 更新导航栏高亮
         function updateNavigation(screenId) {
             const navItems = document.querySelectorAll('.nav-item');
@@ -1677,7 +1814,7 @@ function setupEventListeners() {
     <div class="list-item">
         <div class="item-info">
             <div class="item-name">${item.product} ${lowStockLabel}</div>
-            <div class="item-detail">库存: ${stockDisplay}斤</div>
+            <div class="item-detail">库存: ${stockDisplay}斤 · ${item.count || 0}个</div>
             <div class="progress-bar">
                 <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
             </div>
@@ -1911,6 +2048,7 @@ appData.sales.forEach(sale => {
     const productInput = document.getElementById('purchase-product');
     const product = productInput.value.trim();
     const quantity = parseFloat(document.getElementById('purchase-quantity').value);
+    const count = parseInt(document.getElementById('purchase-count').value, 10) || 0; // 获取家禽数量
     const price = parseFloat(document.getElementById('purchase-price').value);
     const supplier = document.getElementById('purchase-supplier').value.trim();
     const date = document.getElementById('purchase-date').value;
@@ -1918,7 +2056,7 @@ appData.sales.forEach(sale => {
     
     // 验证数据
     if(!product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-        toast.error('请填写有效的商品、数量和价格信息！');
+        toast.error('请填写有效的商品、重量和价格信息！');
         return;
     }
     
@@ -1926,6 +2064,7 @@ appData.sales.forEach(sale => {
     const purchase = {
         product,
         quantity: parseFloat(quantity.toFixed(2)),
+        count: count, // 添加家禽数量
         price: parseFloat(price.toFixed(2)),
         supplier,
         date,
@@ -1945,7 +2084,9 @@ appData.sales.forEach(sale => {
         const inventory = appData.inventory[inventoryIndex];
         const oldStock = parseFloat(inventory.stock);
         const oldCost = parseFloat(inventory.cost);
+        const oldCount = inventory.count || 0; // 获取原有的家禽数量
         const newStock = parseFloat((oldStock + quantity).toFixed(2));
+        const newCount = oldCount + count; // 计算新的家禽数量
         
         // 计算加权平均成本
         const totalCost = oldStock * oldCost + quantity * price;
@@ -1953,6 +2094,7 @@ appData.sales.forEach(sale => {
         
         appData.inventory[inventoryIndex].stock = newStock;
         appData.inventory[inventoryIndex].cost = parseFloat(weightedCost.toFixed(2));
+        appData.inventory[inventoryIndex].count = newCount; // 更新家禽数量
     } else {
         // 添加新商品
         const defaultMarkupPercent = 15; // 默认加价15%
@@ -1962,7 +2104,8 @@ appData.sales.forEach(sale => {
             product,
             stock: parseFloat(quantity.toFixed(2)),
             cost: parseFloat(price.toFixed(2)),
-            price: suggestedPrice
+            price: suggestedPrice,
+            count: count  // 添加家禽数量
         });
     }
     
@@ -1989,14 +2132,15 @@ appData.sales.forEach(sale => {
     const productSelect = document.getElementById('sale-product');
     const product = productSelect.value;
     const quantity = parseFloat(document.getElementById('sale-quantity').value);
+    const count = parseInt(document.getElementById('sale-count').value, 10);
     const price = parseFloat(document.getElementById('sale-price').value);
     const payment = document.getElementById('sale-payment').value;
     const date = document.getElementById('sale-date').value;
     const notes = document.getElementById('sale-notes').value.trim();
     
     // 验证数据
-    if(!customer || !product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
-        toast.error('请填写有效的客户、商品、数量和价格信息！');
+    if(!customer || !product || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0 || isNaN(count) || count < 0) {
+        toast.error('请填写有效的客户、商品、数量、家禽数量和价格信息！');
         return;
     }
     
@@ -2022,6 +2166,13 @@ appData.sales.forEach(sale => {
         return;
     }
     
+    // 检查家禽数量是否足够
+    const availableCount = appData.inventory[inventoryIndex].count || 0;
+    if(count > availableCount) {
+        toast.error(`家禽数量不足，当前${product}库存为${availableCount}个！`);
+        return;
+    }
+    
     // 获取支付方式
     let paymentMethod = '';
     if(payment === '已结清') {
@@ -2042,6 +2193,7 @@ appData.sales.forEach(sale => {
         customer,
         product,
         quantity: parseFloat(quantity.toFixed(2)),
+        count: count, // 家禽数量(个)
         price: parseFloat(price.toFixed(2)),
         payment,
         paymentMethod: payment !== '未结账' ? document.getElementById('sale-payment-method').value : '',
@@ -2055,6 +2207,22 @@ appData.sales.forEach(sale => {
     const newStock = parseFloat((appData.inventory[inventoryIndex].stock - quantity).toFixed(2));
     appData.inventory[inventoryIndex].stock = newStock;
     
+    // 直接更新家禽数量，使用用户输入的值
+    const inventory = appData.inventory[inventoryIndex];
+    const oldCount = inventory.count || 0;
+    const newCount = Math.max(0, oldCount - count);
+    
+    // 检查家禽数量是否足够
+    if (count > oldCount) {
+        toast.warning(`家禽数量超出库存，已按最大可售${oldCount}个调整`);
+    }
+    
+    // 更新家禽数量
+    appData.inventory[inventoryIndex].count = newCount;
+    
+    // 添加销售时的家禽数量信息
+    sale.count = count;
+
     // 添加到销售记录
     appData.sales.push(sale);
     
@@ -2132,12 +2300,25 @@ appData.sales.forEach(sale => {
         function updateProductPrice() {
             const productSelect = document.getElementById('sale-product');
             const priceInput = document.getElementById('sale-price');
+            const countInput = document.getElementById('sale-count');
             const product = productSelect.value;
             
             if(product) {
                 const inventoryItem = appData.inventory.find(item => item.product === product);
                 if(inventoryItem) {
                     priceInput.value = inventoryItem.price;
+                    
+                    // 显示家禽数量默认值
+                    const count = inventoryItem.count || 0;
+                    const stock = parseFloat(inventoryItem.stock) || 0;
+                    
+                    // 设置默认值，但允许用户编辑
+                    countInput.value = count;
+                    countInput.max = count; // 设置最大可售数量
+                    
+                    // 设置数量输入框的最大值为当前库存
+                    document.getElementById('sale-quantity').max = stock;
+                    
                     updateTotalPrice();
                 }
             }
@@ -2407,7 +2588,7 @@ appData.sales.forEach(sale => {
             container.innerHTML = html;
         }
 
-        // 完全替换updateCustomerList函数
+        // 增强的更新客户列表函数
 function updateCustomerList() {
     const container = document.getElementById('customer-list');
     const paginationContainer = document.getElementById('customer-pagination');
@@ -2417,70 +2598,74 @@ function updateCustomerList() {
         loadAppData(); // 重新加载数据
     }
     
-    console.log('更新客户列表，当前客户数量:', appData.customers.length);
-    
     if(appData.customers.length === 0) {
         container.innerHTML = '<p class="empty-hint">还没有客户，请添加新客户</p>';
         paginationContainer.innerHTML = '';
         return;
     }
     
-    // 计算客户欠款
-    const customerDebt = calculateCustomerDebt();
-    
-    // 筛选和排序客户列表
-    let filteredCustomers = [...appData.customers];
-    
-    // 应用搜索筛选
-    if(currentState.customerFilter) {
-        filteredCustomers = filteredCustomers.filter(customer => 
-            customer.name.toLowerCase().includes(currentState.customerFilter) ||
-            (customer.contact && customer.contact.toLowerCase().includes(currentState.customerFilter)) ||
-            (customer.phone && customer.phone.includes(currentState.customerFilter))
-        );
-    }
-    
-    // 按欠款金额排序，欠款多的在前面
-    filteredCustomers.sort((a, b) => 
-        (customerDebt[b.name] || 0) - (customerDebt[a.name] || 0)
-    );
-    
-    // 计算分页
-    const totalPages = Math.ceil(filteredCustomers.length / currentState.itemsPerPage);
-    const start = (currentState.customerPage - 1) * currentState.itemsPerPage;
-    const end = start + currentState.itemsPerPage;
-    const pageCustomers = filteredCustomers.slice(start, end);
-    
-    // 生成客户列表HTML
-    let html = '';
-    
-    pageCustomers.forEach(customer => {
-        const debt = customerDebt[customer.name] || 0;
-        const debtHtml = debt > 0 ? 
-            `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` : 
-            `<span class="badge badge-success">无欠款</span>`;
+    try {
+        // 计算客户欠款
+        const customerDebt = calculateCustomerDebt();
         
-        html += `
-            <div class="list-item" onclick="showCustomerDetail('${customer.name}')">
-                <div class="item-info">
-                    <div class="item-name">${customer.name}</div>
-                    <div class="item-detail">联系人: ${customer.contact || '未设置'} ${customer.phone ? `(${formatPhone(customer.phone)})` : ''}</div>
+        // 筛选和排序客户列表
+        let filteredCustomers = [...appData.customers];
+        
+        // 应用搜索筛选
+        if(currentState.customerFilter) {
+            filteredCustomers = filteredCustomers.filter(customer => 
+                (customer.name && customer.name.toLowerCase().includes(currentState.customerFilter)) ||
+                (customer.contact && customer.contact.toLowerCase().includes(currentState.customerFilter)) ||
+                (customer.phone && customer.phone.includes(currentState.customerFilter))
+            );
+        }
+        
+        // 按欠款金额排序，欠款多的在前面
+        filteredCustomers.sort((a, b) => 
+            (customerDebt[b.name] || 0) - (customerDebt[a.name] || 0)
+        );
+        
+        // 计算分页
+        const totalPages = Math.ceil(filteredCustomers.length / currentState.itemsPerPage);
+        const start = (currentState.customerPage - 1) * currentState.itemsPerPage;
+        const end = start + currentState.itemsPerPage;
+        const pageCustomers = filteredCustomers.slice(start, end);
+        
+        // 生成客户列表HTML
+        let html = '';
+        
+        pageCustomers.forEach(customer => {
+            const debt = customerDebt[customer.name] || 0;
+            const debtHtml = debt > 0 ? 
+                `<span class="badge badge-danger">未结清: ${formatCurrency(debt)}</span>` : 
+                `<span class="badge badge-success">无欠款</span>`;
+            
+            html += `
+                <div class="list-item" onclick="showCustomerDetail('${customer.name}')">
+                    <div class="item-info">
+                        <div class="item-name">${customer.name}</div>
+                        <div class="item-detail">联系人: ${customer.contact || '未设置'} ${customer.phone ? `(${formatPhone(customer.phone)})` : ''}</div>
+                    </div>
+                    <div class="item-value">
+                        ${debt > 0 ? formatCurrency(debt) : ''}
+                        ${debtHtml}
+                    </div>
                 </div>
-                <div class="item-value">
-                    ${debt > 0 ? formatCurrency(debt) : ''}
-                    ${debtHtml}
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    // 更新分页控件
-    updatePagination(paginationContainer, totalPages, currentState.customerPage, function(page) {
-        currentState.customerPage = page;
-        updateCustomerList();
-    });
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // 更新分页控件
+        updatePagination(paginationContainer, totalPages, currentState.customerPage, function(page) {
+            currentState.customerPage = page;
+            updateCustomerList();
+        });
+    } catch (error) {
+        console.error('更新客户列表时出错:', error);
+        container.innerHTML = '<p class="empty-hint">加载客户列表时出错，请刷新页面重试</p>';
+        paginationContainer.innerHTML = '';
+    }
 }
         // 更新库存列表
         function updateInventoryList() {
@@ -2547,7 +2732,7 @@ function updateCustomerList() {
         <div class="item-info">
             <div class="item-name">${item.product} ${lowStockLabel}</div>
             <div class="item-detail">成本: ${formatCurrency(item.cost)}/斤 · 毛利: ${marginPercent}%</div>
-            <div class="item-detail">库存: ${stockDisplay}斤</div>
+            <div class="item-detail">库存: ${stockDisplay}斤 · ${item.count || 0}个</div>
             <div class="progress-bar">
                 <div class="progress ${progressClass}" style="width: ${stockPercentage}%"></div>
             </div>
@@ -3117,8 +3302,8 @@ setTimeout(updateDashboard, 100);
     });
     
     return customerDebt;
-}               
-       // 生成分页控件
+}             
+         // 生成分页控件
 function updatePagination(container, totalPages, currentPage, callbackFunction) {
     if(totalPages <= 1) {
         container.innerHTML = '';
@@ -3184,7 +3369,6 @@ function changePage(page, containerId) {
             document.querySelector('#customer-detail-screen .filter-tag.active').getAttribute('data-filter'));
     }
 }  
-        
         // 编辑库存商品
         function editInventoryItem(productName) {
             const item = appData.inventory.find(item => item.product === productName);
@@ -3201,6 +3385,10 @@ function changePage(page, containerId) {
     <label class="form-label">当前库存(斤)</label>
     <input type="number" step="0.01" class="form-control" id="edit-product-stock" value="${parseFloat(item.stock).toFixed(2)}">
 </div>
+    <div class="form-group">
+        <label class="form-label">家禽数量(个)</label>
+        <input type="number" step="1" class="form-control" id="edit-product-count" value="${item.count || 0}">
+    </div>
     <div class="form-group">
         <label class="form-label">成本价(元/斤)</label>
         <input type="number" step="0.01" class="form-control" id="edit-product-cost" value="${parseFloat(item.cost).toFixed(2)}">
@@ -3236,17 +3424,19 @@ function changePage(page, containerId) {
             });
             document.getElementById('edit-save').addEventListener('click', () => {
         const newStock = parseFloat(document.getElementById('edit-product-stock').value);
+        const newCount = parseInt(document.getElementById('edit-product-count').value, 10);
         const newCost = parseFloat(document.getElementById('edit-product-cost').value);
         const newPrice = parseFloat(document.getElementById('edit-product-price').value);
         
         // 验证输入
-        if(isNaN(newStock) || newStock < 0 || isNaN(newCost) || newCost <= 0 || isNaN(newPrice) || newPrice <= 0) {
+        if(isNaN(newStock) || newStock < 0 || isNaN(newCost) || newCost <= 0 || isNaN(newPrice) || newPrice <= 0 || isNaN(newCount) || newCount < 0) {
             toast.error('请输入有效的数值!');
             return;
         }
         
         // 更新商品信息
         item.stock = parseFloat(newStock.toFixed(2));
+        item.count = newCount;
         item.cost = parseFloat(newCost.toFixed(2));
         item.price = parseFloat(newPrice.toFixed(2));
         
@@ -3282,9 +3472,17 @@ function changePage(page, containerId) {
         <input type="text" class="form-control" value="${parseFloat(item.stock).toFixed(2)}" readonly>
     </div>
     <div class="form-group">
-    <label class="form-label">补货数量(斤)</label>
-    <input type="number" step="0.01" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
+    <label class="form-label">当前家禽数量(个)</label>
+    <input type="text" class="form-control" value="${item.count || 0}" readonly>
 </div>
+    <div class="form-group">
+        <label class="form-label">补货数量(斤)</label>
+        <input type="number" step="0.01" class="form-control" id="add-stock-quantity" placeholder="输入补货数量">
+    </div>
+    <div class="form-group">
+        <label class="form-label">补充家禽数量(个)</label>
+        <input type="number" step="1" class="form-control" id="add-stock-count" placeholder="输入家禽数量">
+    </div>
     <div class="form-group">
         <label class="form-label">进货单价(元/斤)</label>
         <input type="number" step="0.01" class="form-control" id="add-stock-cost" value="${parseFloat(item.cost).toFixed(2)}" placeholder="输入进货单价">
@@ -3321,6 +3519,7 @@ function changePage(page, containerId) {
             
                document.getElementById('add-stock-save').addEventListener('click', () => {
         const quantity = parseFloat(document.getElementById('add-stock-quantity').value);
+        const count = parseInt(document.getElementById('add-stock-count').value, 10);
         const cost = parseFloat(document.getElementById('add-stock-cost').value);
         const supplier = document.getElementById('add-stock-supplier').value.trim();
         
@@ -3335,6 +3534,7 @@ function changePage(page, containerId) {
                 const purchase = {
                     product: item.product,
                     quantity: quantity,
+                    count: count || 0, // 添加家禽数量
                     price: cost,
                     supplier: supplier,
                     date: new Date().toISOString().split('T')[0],
@@ -3348,7 +3548,9 @@ function changePage(page, containerId) {
                 }
                 const oldStock = parseFloat(item.stock);
         const oldCost = parseFloat(item.cost);
+        const oldCount = item.count || 0;
         const newStock = parseFloat((oldStock + quantity).toFixed(2));
+        const newCount = oldCount + (count || 0);
         
         // 计算加权平均成本
         const totalCost = oldStock * oldCost + quantity * cost;
@@ -3356,6 +3558,7 @@ function changePage(page, containerId) {
         
         item.stock = newStock;
         item.cost = parseFloat(weightedCost.toFixed(2));
+        item.count = newCount;
                                 
                 // 添加到进货记录
                 appData.purchases.push(purchase);
@@ -4089,7 +4292,7 @@ html += `
     <div class="item-info">
         <div class="item-name">${rankIcon} ${name}</div>
         <div class="item-detail">本月销量: ${quantityDisplay}斤 · 占比: ${percentage}%</div>
-        <div class="item-detail">剩余库存: ${stockDisplay}斤</div>
+        <div class="item-detail">剩余库存: ${stockDisplay}斤 · ${item.count || 0}个</div>
     </div>
     <div class="item-value">
         ${quantityDisplay}斤
@@ -4583,6 +4786,104 @@ function downloadFile(fileName, content, mimeType) {
                 document.body.removeChild(modal);
             });
         }
+    </script>
+    
+    <!-- 客户列表和搜索修复代码 -->
+    <script>
+    // 客户列表和搜索修复代码
+    (function() {
+        // 添加客户搜索监听函数
+        function setupCustomerSearchFix() {
+            console.log("设置客户搜索修复...");
+            const searchInput = document.getElementById('customer-search');
+            if (searchInput) {
+                // 克隆节点以移除所有旧事件监听器
+                const newSearchInput = searchInput.cloneNode(true);
+                searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+                
+                // 添加新的事件监听器
+                newSearchInput.addEventListener('input', function() {
+                    console.log("搜索:", this.value);
+                    currentState.customerFilter = this.value.trim().toLowerCase();
+                    currentState.customerPage = 1;
+                    refreshCustomerList();
+                });
+            }
+        }
+        
+        // 刷新客户列表的增强版函数
+        function refreshCustomerList() {
+            console.log("刷新客户列表...");
+            try {
+                // 调用原始函数
+                updateCustomerList();
+            } catch (error) {
+                console.error("更新客户列表出错:", error);
+                // 应急备份方案
+                const container = document.getElementById('customer-list');
+                if (container && appData && appData.customers) {
+                    let html = '';
+                    let customers = [...appData.customers];
+                    
+                    // 应用搜索筛选
+                    if (currentState.customerFilter) {
+                        customers = customers.filter(c => 
+                            (c.name && c.name.toLowerCase().includes(currentState.customerFilter)) ||
+                            (c.contact && c.contact.toLowerCase().includes(currentState.customerFilter))
+                        );
+                    }
+                    
+                    // 显示客户
+                    if (customers.length === 0) {
+                        container.innerHTML = '<p class="empty-hint">没有找到客户</p>';
+                    } else {
+                        customers.forEach(c => {
+                            html += `
+                                <div class="list-item" onclick="showCustomerDetail('${c.name}')">
+                                    <div class="item-info">
+                                        <div class="item-name">${c.name}</div>
+                                        <div class="item-detail">联系人: ${c.contact || '未设置'}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    }
+                }
+            }
+        }
+        
+        // 修复切换到客户页面
+        const originalShowScreen = window.showScreen;
+        window.showScreen = function(screenId) {
+            // 调用原始函数
+            originalShowScreen(screenId);
+            
+            // 如果是客户页面，应用我们的修复
+            if (screenId === 'customer-form') {
+                console.log("检测到客户页面，应用修复...");
+                setTimeout(() => {
+                    setupCustomerSearchFix();
+                    refreshCustomerList();
+                }, 100);
+            }
+        };
+        
+        // 立即应用修复
+        console.log("应用客户功能修复...");
+        setTimeout(() => {
+            setupCustomerSearchFix();
+            if (currentState.currentScreen === 'customer-form') {
+                refreshCustomerList();
+            }
+        }, 1000);
+        
+        // 添加全局修复函数
+        window.fixCustomerList = function() {
+            setupCustomerSearchFix();
+            refreshCustomerList();
+        };
+    })();
     </script>
 </body>
 </html>
